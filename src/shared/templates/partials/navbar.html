@@ -1,0 +1,27 @@
+<nav class="navbar bg-base-100 fixed top-0 left-0 right-0 z-50 border-b">
+  <div class="flex-1">
+    <button class="btn btn-ghost lg:hidden"
+            @click="sidebarOpen = !sidebarOpen">
+      ☰
+    </button>
+    <span class="font-semibold ml-2">
+      {{ app_name | default:"App" }}
+    </span>
+  </div>
+
+  <div class="flex-none">
+    <div class="dropdown dropdown-end">
+      <button class="btn btn-ghost btn-circle">
+        {{ user_initials | default:"U" }}
+      </button>
+      <ul class="menu menu-sm dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-40">
+        <li><a href="/profile">Perfil</a></li>
+        <li>
+          <form method="POST" action="/auth/logout">
+            <button type="submit">Logout</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

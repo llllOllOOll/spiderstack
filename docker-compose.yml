@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: spiderdb
+    environment:
+      - POSTGRES_USER=spider
+      - POSTGRES_PASSWORD=spider
+      - POSTGRES_DB=spiderdb
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spider"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

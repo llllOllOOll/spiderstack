@@ -1,0 +1,17 @@
+.{
+    .name = .basic,
+    .version = "0.0.0",
+    .fingerprint = 0x907975534a7c900a, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.16.0-dev.2984+cb7d2b056",
+    .dependencies = .{
+        .spider = .{
+            .url = "git+https://github.com/llllOllOOll/spider#ea56e917cf0c4ca58471caaa890d5b2f34a9e7e0",
+            .hash = "spider-0.3.0-RIctlYwPBAC9h3SSeR-z2o6JXp2lWRhhHRQfm1hXkBi7",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

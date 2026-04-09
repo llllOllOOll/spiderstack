@@ -1,0 +1,47 @@
+# Zig build artifacts
+zig-out/
+.zig-cache/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Node.js
+node_modules/
+
+# Zig packages
+zig-pkg/
+
+# Zig specific
+build/
+
+# Spider framework
+.env
+.env.local
+.env.production
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/

@@ -1,0 +1,26 @@
+<h2> SiderBar </h2>
+<aside class="fixed top-0 left-0 h-full w-64 bg-base-100 border-r
+              transform lg:translate-x-0
+              transition-transform duration-200 z-40"
+       :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
+
+  <div class="p-4 font-bold text-lg">
+    {{ app_name | default:"App" }}
+  </div>
+
+  <ul class="menu p-2">
+
+    {% for item in nav %}
+    <li>
+      <a href="{{ item.href }}"
+         hx-get="{{ item.href }}"
+         hx-target="#main"
+         hx-push-url="true"
+         hx-indicator="#htmx-spinner">
+        {{ item.label }}
+      </a>
+    </li>
+    {% endfor %}
+
+  </ul>
+</aside>
