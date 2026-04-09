@@ -16,4 +16,7 @@ pub const strings = .{
     // Home
     .home_title = "Inicio",
     .home_subtitle = "Bem-vindo ao app",
+
+    // Auth
+    .login_google_button = "Continuar com Google",
 };

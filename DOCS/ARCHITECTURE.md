@@ -100,12 +100,27 @@ pub fn delete(alloc: std.mem.Allocator, id: i32) !void
 
 ### Database API
 
+#### ✅ Modern APIs (Use these)
+
+**For parameterized queries (single command):**
 ```zig
 db.query(Account, arena, sql, .{user_id})     // SELECT multiple → []T
 db.queryOne(Account, arena, sql, .{id})        // SELECT one     → ?T
 db.query(i32, arena, sql, .{...})              // INSERT RETURNING id
 db.query(void, arena, sql, .{...})             // INSERT/UPDATE/DELETE
 ```
+
+**For multi-statement SQL (migrations, scripts):**
+```zig
+db.queryExecute(void, arena, sql)             // CREATE TABLE...; CREATE INDEX...
+db.queryExecute(i32, arena, sql)              // Multiple statements with return
+db.queryExecute(Account, arena, sql)           // SELECT without parameters
+```
+
+#### ❌ Deprecated APIs (Never use these)
+- `queryParams`, `queryWith`, `queryAs`, `MappedRows`, `queryConn`
+- `execRaw` - use `queryExecute` instead
+- Manual `BEGIN`/`COMMIT` - use transaction API instead
 
 ### SQL Alias Rule
 
@@ -134,7 +149,13 @@ try tx.query(void, arena, "UPDATE accounts SET balance = ...", .{...});
 try tx.commit();
 ```
 
-Never use manual `BEGIN`/`COMMIT` — always use the transaction API.
+**Transaction API Pattern:**
+- ✅ Use `db.begin()` to start transaction
+- ✅ Use `tx.query()` for operations within transaction
+- ✅ Use `defer tx.rollback()` for automatic cleanup
+- ✅ Call `tx.commit()` to finalize transaction
+
+**Never use manual `BEGIN`/`COMMIT`** — always use the transaction API.
 
 ---
 
@@ -445,6 +466,39 @@ Input validation utilities — available to all features.
 - Register new migrations in `migrations.zig`
 - Executed automatically at startup via `migrations.run(allocator)`
 
+### Migration API Pattern
+
+```zig
+// ✅ Correct - Modern API
+const create_migrations_table_sql = "CREATE TABLE...";
+try db.queryExecute(void, arena.allocator(), create_migrations_table_sql);
+
+// ✅ Check if migration already ran
+const MigrationCheck = struct { count: i32 };
+const checks = try db.query(MigrationCheck, arena.allocator(),
+    "SELECT COUNT(*) as count FROM schema_migrations WHERE version = $1",
+    .{migration.version},
+);
+
+// ✅ Execute migration if needed
+if (checks.len == 0 or checks[0].count == 0) {
+    const sql_z = try arena.allocator().dupeZ(u8, migration_sql);
+    try db.queryExecute(void, arena.allocator(), sql_z);
+    
+    // ✅ Record migration
+    try db.query(void, arena.allocator(),
+        "INSERT INTO schema_migrations (version) VALUES ($1)",
+        .{migration.version}
+    );
+}
+```
+
+**Key Points:**
+- Use `queryExecute` for migration SQL (supports multiple commands)
+- Use `query` for parameterized operations (INSERT with version)
+- Always use arena allocator for migration execution
+- Migration logic: check → execute → record
+
 ---
 
 ## Services (`src/services/`)
@@ -536,8 +590,11 @@ defer {
 ## Rules for AI Agents
 
 1. Never create a new feature outside `src/features/`
-2. Never use deprecated DB API: `queryParams`, `queryWith`, `queryAs`, `MappedRows`, `queryConn`
-3. Always use current Spider API: `db.query(T, arena, sql, params)` and `db.queryOne(T, arena, sql, params)`
+2. Never use deprecated DB API: `queryParams`, `queryWith`, `queryAs`, `MappedRows`, `queryConn`, `execRaw`
+3. Always use current Spider API: 
+   - `db.query(T, arena, sql, params)` - parameterized queries
+   - `db.queryOne(T, arena, sql, params)` - single row with params
+   - `db.queryExecute(T, arena, sql)` - multi-statement SQL without params
 4. Always use transaction API (`db.begin()`) for atomic operations — never manual BEGIN/COMMIT
 5. Never store `f64` for money — always `i64` (cents)
 6. Never put presentation fields (joined names, icons) in `model.zig`
@@ -551,3 +608,36 @@ defer {
 14. `src/features/tests/` is dev scaffolding only — do not use as architecture reference
 15. Presenter receives raw slices — never pre-converted rows
 16. `buildContext` lives in presenter — never in controller
+
+---
+
+## API Strategy Guide
+
+### ✅ Modern APIs (Always Use)
+
+| Use Case | API | Example |
+|----------|-----|---------|
+| **Parameterized queries** | `db.query(T, arena, sql, params)` | `SELECT * FROM users WHERE id = $1` |
+| **Single row with params** | `db.queryOne(T, arena, sql, params)` | `SELECT * FROM users WHERE email = $1 LIMIT 1` |
+| **Multi-statement SQL** | `db.queryExecute(T, arena, sql)` | `CREATE TABLE...; CREATE INDEX...` |
+| **Transactions** | `db.begin()` + `tx.query()` | Atomic operations |
+
+### ❌ Deprecated APIs (Never Use)
+
+- `queryParams`, `queryWith`, `queryAs`, `MappedRows`, `queryConn`
+- `execRaw` - replaced by `queryExecute`
+- Manual `BEGIN`/`COMMIT` statements
+
+### Migration-Specific Patterns
+
+**For migrations with multiple commands:**
+```zig
+try db.queryExecute(void, arena, migration_sql);
+```
+
+**For parameterized operations in migrations:**
+```zig
+try db.query(void, arena, "INSERT...", .{version});
+```
+
+**Key Rule:** Use `queryExecute` for SQL without parameters, `query` for SQL with parameters.

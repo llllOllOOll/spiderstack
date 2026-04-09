@@ -24,10 +24,12 @@ pub fn main(init: std.process.Init) !void {
     defer server.deinit();
 
     server
-        .use(middleware.auth)
-        .get("/", home.controller.index)
         .get("/login", auth.controller.index)
         .post("/login", auth.controller.handleLogin)
+        .get("/auth/google", auth.controller.redirectToGoogle)
+        .get("/auth/google/callback", auth.controller.googleCallback)
+        .use(middleware.auth)
+        .get("/", home.controller.index)
         .listen() catch |err| {
         std.log.err("server error: {}", .{err});
         return err;

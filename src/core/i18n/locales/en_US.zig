@@ -16,4 +16,7 @@ pub const strings = .{
     // Home
     .home_title = "Home",
     .home_subtitle = "Welcome to the app",
+
+    // Auth
+    .login_google_button = "Continue with Google",
 };
