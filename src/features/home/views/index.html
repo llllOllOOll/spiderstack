@@ -3,34 +3,33 @@
 
   <!-- SpiderStack Header -->
   <div class="text-center py-8">
-    <h1 class="text-5xl font-bold tracking-tighter text-yellow-400">SpiderStack</h1>
-    <p class="text-zinc-400 mt-2">Zig + Spider + Tailwind + HTMX + Alpine.js + PostgreSQL</p>
+    <h1 class="text-5xl font-bold tracking-tighter text-yellow-400">{{ base.user_name }}</h1>
+    <p class="text-zinc-400 mt-2">{{ base.user_email }}</p>
   </div>
 
   <!-- Spider Framework Card -->
   <div class="bg-zinc-900 rounded-3xl p-6">
     <div class="flex items-center gap-3 mb-4">
-      <span class="text-2xl">🕷️</span>
+      <img src="/spider_logo.png" alt="Spider" class="w-10 h-10">
       <div>
-        <div class="font-semibold text-yellow-400">Spider</div>
+        <div class="font-semibold text-yellow-400">{{ spider_card_title }}</div>
         <div class="text-xs text-zinc-400">Web Framework for Zig</div>
       </div>
     </div>
     <p class="text-zinc-300 text-sm leading-relaxed">
-      Fast, minimal, built for systems.<br>
-      HTTP, WebSockets, PostgreSQL, Templates — batteries included.
+      {{ spider_card_desc }}
     </p>
     <div class="mt-5">
       <a href="https://www.spiderme.org/" target="_blank" 
          class="block bg-yellow-400 hover:bg-yellow-300 transition text-zinc-950 font-medium text-center py-3 rounded-2xl">
-        Visitar Site do Spider →
+        {{ spider_card_cta }}
       </a>
     </div>
   </div>
 
   <!-- Tech Stack -->
   <div class="bg-zinc-900 rounded-3xl p-6">
-    <div class="text-yellow-400 text-sm font-medium mb-5">Stack Completa</div>
+    <div class="text-yellow-400 text-sm font-medium mb-5">{{ tech_stack_title }}</div>
     <div class="grid grid-cols-3 gap-6 text-center">
       <div><div class="text-4xl mb-1">🔷</div><span class="text-xs text-zinc-400">Zig</span></div>
       <div><div class="text-4xl mb-1">🌊</div><span class="text-xs text-zinc-400">Tailwind</span></div>

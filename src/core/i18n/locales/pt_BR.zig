@@ -16,6 +16,10 @@ pub const strings = .{
     // Home
     .home_title = "Início",
     .home_subtitle = "Bem-vindo ao app",
+    .home_spider_title = "Spider",
+    .home_spider_desc = "Fast, minimal, built for systems. HTTP, WebSockets, PostgreSQL, Templates — batteries included.",
+    .home_spider_cta = "Visitar Site do Spider →",
+    .home_tech_stack = "Stack Completa",
 
     // Auth
     .login_google_button = "Continuar com Google",
