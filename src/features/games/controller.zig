@@ -77,5 +77,5 @@ pub fn handleDelete(alloc: std.mem.Allocator, req: *Request) !Response {
 
     try repository.delete(alloc, id);
 
-    return Response.redirect(alloc, "/games");
+    return Response.text(alloc, "");
 }

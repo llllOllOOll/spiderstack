@@ -4,7 +4,7 @@
   <!-- Header -->
   <div class="flex items-center justify-between mt-8">
     <h1 class="text-2xl font-semibold text-yellow-400 tracking-tight">{{ page_title }}</h1>
-    <button onclick="document.getElementById('game-form').showModal()"
+    <button onclick="openAddGameModal()"
             class="bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-semibold text-sm px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <path d="M12 4.5v15m7.5-7.5h-15"/>
@@ -55,7 +55,7 @@
       <div class="bg-zinc-900 rounded-2xl divide-y divide-zinc-800/60" id="game-list-mobile">
         {% for game in games %}
         {% if game.rank > 3 %}
-        <div class="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/40 transition-colors">
+        <div class="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/40 transition-colors" id="game-row-{{ game.id }}">
           <div class="w-7 text-center font-mono text-sm text-zinc-600 flex-shrink-0">{{ game.rank }}</div>
           <div class="flex-1 min-w-0">
             <div class="text-sm font-medium text-white truncate">{{ game.name }}</div>
@@ -73,12 +73,16 @@
             </span>
           </div>
           <div class="flex items-center gap-1 flex-shrink-0 ml-1">
-            <button class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-yellow-400 hover:bg-zinc-800 transition-colors">
+            <button type="button" class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-yellow-400 hover:bg-zinc-800 transition-colors" onclick="openEditGameModal({{ game.id }}, '{{ game.name }}', '{{ game.platform }}', {{ game.release_year }}, '{{ game.genre }}', '{{ game.developer }}', {{ game.sales }}, {{ game.rating }})">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L18 8.625"/>
               </svg>
             </button>
-            <button class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-red-400 hover:bg-zinc-800 transition-colors">
+            <button type="button" class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-red-400 hover:bg-zinc-800 transition-colors" 
+              hx-post="/games/{{ game.id }}/delete" 
+              hx-swap="outerHTML"
+              data-game-id="{{ game.id }}"
+              onclick="deleteGame(this)">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
               </svg>
@@ -111,7 +115,7 @@
         </thead>
         <tbody class="divide-y divide-zinc-800/60">
           {% for game in games %}
-          <tr class="hover:bg-zinc-800/40 transition-colors group">
+          <tr class="hover:bg-zinc-800/40 transition-colors group" id="game-row-{{ game.id }}">
             <td class="px-5 py-3.5">
               {% if game.rank == 1 %}<span class="text-base">🥇</span>
               {% elif game.rank == 2 %}<span class="text-base">🥈</span>
@@ -140,7 +144,7 @@
                     <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L18 8.625"/>
                   </svg>
                 </button>
-                <button class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-700 transition-colors">
+                <button class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-700 transition-colors" data-game-id="{{ game.id }}" onclick="deleteGame(this)">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                     <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
                   </svg>
@@ -164,74 +168,129 @@
 
 </div>
 
-<!-- Add Game Modal -->
-<dialog id="game-form" class="bg-zinc-900 rounded-2xl p-6 w-full max-w-sm mx-4 backdrop:bg-zinc-950/80 border border-zinc-800">
-  <form hx-post="/games/create" hx-target="#game-list" hx-swap="beforeend" class="space-y-4">
-    <div class="flex items-center justify-between mb-2">
-      <h2 class="text-lg font-semibold text-yellow-400">Add New Game</h2>
-      <button type="button" onclick="document.getElementById('game-form').close()"
-              class="text-zinc-600 hover:text-zinc-400 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-          <path d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-      </button>
-    </div>
+<!-- Add/Edit Game Modal -->
+<div id="game-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+  <div class="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onclick="closeGameModal()"></div>
+  
+  <div class="relative bg-zinc-900 rounded-2xl p-6 w-full max-w-sm border border-zinc-800 shadow-2xl">
+    
+    <form id="game-form" hx-post="" hx-target="#main" class="space-y-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-semibold text-yellow-400">Add/Edit Game</h2>
+        <button type="button" onclick="closeGameModal()" class="text-zinc-600 hover:text-zinc-400 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
 
-    <div>
-      <label class="block text-zinc-400 text-xs font-medium mb-1.5">Name</label>
-      <input type="text" name="name" required
-             class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-400/50">
-    </div>
+      <input type="hidden" name="id" id="game-id">
 
-    <div class="grid grid-cols-2 gap-3">
       <div>
-        <label class="block text-zinc-400 text-xs font-medium mb-1.5">Platform</label>
-        <input type="text" name="platform" required
-               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-400/50">
+        <label class="block text-zinc-400 text-xs font-medium mb-1.5">Name</label>
+        <input type="text" name="name" id="game-name" required
+               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
       </div>
-      <div>
-        <label class="block text-zinc-400 text-xs font-medium mb-1.5">Year</label>
-        <input type="number" name="release_year" required
-               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-400/50">
-      </div>
-    </div>
 
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-zinc-400 text-xs font-medium mb-1.5">Genre</label>
-        <input type="text" name="genre" required
-               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-400/50">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Platform</label>
+          <input type="text" name="platform" id="game-platform" required
+                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+        </div>
+        <div>
+          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Year</label>
+          <input type="number" name="release_year" id="game-year" required
+                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+        </div>
       </div>
-      <div>
-        <label class="block text-zinc-400 text-xs font-medium mb-1.5">Developer</label>
-        <input type="text" name="developer" required
-               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-400/50">
-      </div>
-    </div>
 
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="block text-zinc-400 text-xs font-medium mb-1.5">Sales (M)</label>
-        <input type="number" step="0.01" name="sales_millions"
-               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-400/50">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Genre</label>
+          <input type="text" name="genre" id="game-genre" required
+                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+        </div>
+        <div>
+          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Developer</label>
+          <input type="text" name="developer" id="game-developer" required
+                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+        </div>
       </div>
-      <div>
-        <label class="block text-zinc-400 text-xs font-medium mb-1.5">Rating</label>
-        <input type="number" step="0.1" max="10" name="rating"
-               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-yellow-400/50">
-      </div>
-    </div>
 
-    <div class="flex gap-3 pt-2">
-      <button type="submit"
-              class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-semibold py-2.5 rounded-xl text-sm transition-colors">
-        Save Game
-      </button>
-      <button type="button" onclick="document.getElementById('game-form').close()"
-              class="px-5 py-2.5 text-zinc-400 hover:text-white text-sm transition-colors">
-        Cancel
-      </button>
-    </div>
-  </form>
-</dialog>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Sales (M)</label>
+          <input type="number" step="0.01" name="sales_millions" id="game-sales"
+                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+        </div>
+        <div>
+          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Rating</label>
+          <input type="number" step="0.1" max="10" name="rating" id="game-rating"
+                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+        </div>
+      </div>
+
+      <div class="flex gap-3 pt-2">
+        <button type="submit"
+                class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-semibold py-2.5 rounded-xl text-sm">
+          Save
+        </button>
+        <button type="button" onclick="closeGameModal()"
+                class="px-5 py-2.5 text-zinc-400 hover:text-white text-sm">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Open modal for adding new game
+function openAddGameModal() {
+  document.getElementById('game-id').value = '';
+  document.getElementById('game-name').value = '';
+  document.getElementById('game-platform').value = '';
+  document.getElementById('game-year').value = '';
+  document.getElementById('game-genre').value = '';
+  document.getElementById('game-developer').value = '';
+  document.getElementById('game-sales').value = '';
+  document.getElementById('game-rating').value = '';
+  document.getElementById('game-form').setAttribute('hx-post', '/games/create');
+  htmx.process(document.getElementById('game-form')); // refresh HTMX
+  document.getElementById('game-modal').style.display = 'flex';
+}
+
+// Open modal for editing - preenche campos e muda endpoint
+function openEditGameModal(id, name, platform, year, genre, developer, sales, rating) {
+  console.log('openEditGameModal called, id:', id);
+  document.getElementById('game-id').value = id;
+  document.getElementById('game-name').value = name;
+  document.getElementById('game-platform').value = platform;
+  document.getElementById('game-year').value = year;
+  document.getElementById('game-genre').value = genre;
+  document.getElementById('game-developer').value = developer;
+  document.getElementById('game-sales').value = sales;
+  document.getElementById('game-rating').value = rating;
+  document.getElementById('game-form').setAttribute('hx-post', '/games/' + id + '/update');
+  htmx.process(document.getElementById('game-form')); // refresh HTMX
+  document.getElementById('game-modal').style.display = 'flex';
+}
+
+// Close modal
+function closeGameModal() {
+  document.getElementById('game-modal').style.display = 'none';
+  document.getElementById('game-form').reset();
+}
+
+// Delete game
+function deleteGame(btn) {
+  if (!confirm('Delete game?')) return;
+  const id = btn.getAttribute('data-game-id');
+  fetch('/games/' + id + '/delete', { method: 'POST' })
+    .then(() => {
+      document.querySelectorAll('[id="game-row-' + id + '"]').forEach(el => el.remove());
+    });
+}
+</script>
 {% end %}

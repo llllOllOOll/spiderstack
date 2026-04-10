@@ -5,6 +5,7 @@ const model = @import("model.zig");
 
 pub const GameRow = struct {
     id: i32,
+    rank: i32,
     name: []const u8,
     platform: []const u8,
     release_year: i32,
@@ -21,12 +22,13 @@ pub const GameListContext = struct {
     empty_message: []const u8,
 };
 
-pub fn toRow(alloc: std.mem.Allocator, game: anytype, locale: i18n.Locale) !GameRow {
+pub fn toRow(alloc: std.mem.Allocator, game: anytype, rank: i32, locale: i18n.Locale) !GameRow {
     _ = locale;
     const sales_str = try std.fmt.allocPrint(alloc, "{d:.2}", .{game.sales_millions});
     const rating_str = try std.fmt.allocPrint(alloc, "{d:.1}", .{game.rating});
     return GameRow{
         .id = game.id,
+        .rank = rank,
         .name = game.name,
         .platform = game.platform,
         .release_year = game.release_year,
@@ -48,9 +50,11 @@ pub fn buildGameListContext(
     var rows = try std.ArrayList(GameRow).initCapacity(alloc, games.len);
     errdefer rows.deinit(alloc);
 
+    var rank: i32 = 1;
     for (games) |game| {
-        const row = try toRow(alloc, game, locale);
+        const row = try toRow(alloc, game, rank, locale);
         try rows.append(alloc, row);
+        rank += 1;
     }
 
     return GameListContext{
