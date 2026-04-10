@@ -1,5 +1,6 @@
 const std = @import("std");
 const spider = @import("spider");
+const db = spider.pg;
 const Response = spider.Response;
 const Request = spider.Request;
 const auth = spider.auth;
@@ -9,6 +10,7 @@ const http_client = spider.http_client;
 const presenter = @import("presenter/mod.zig");
 const repository = @import("repository.zig");
 const model = @import("model.zig");
+const AppClaims = @import("core").middleware.AppClaims;
 
 const view = @embedFile("views/login.html");
 
@@ -66,9 +68,11 @@ pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
     var tv: std.c.timeval = undefined;
     _ = std.c.gettimeofday(&tv, null);
     const exp = tv.sec + (60 * 60 * 24 * 7); // 7 days
-    const token = try auth.jwtSign(arena_allocator, .{
+    const token = try auth.jwtSign(arena_allocator, AppClaims{
         .sub = user.id,
         .email = user.email,
+        .locale = user.locale,
+        .locale_set = user.locale_set,
         .exp = exp,
     }, std.mem.span(jwt_secret));
 
@@ -146,9 +150,17 @@ pub fn handleLogin(alloc: std.mem.Allocator, req: *spider.Request) !spider.Respo
     return spider.Response.text(alloc, "POST received");
 }
 
-test "handleLogin should fail intentionally" {
-    // This test is designed to fail to demonstrate test failure behavior
+test "transaction creates table but rolls back" {
+    const alloc = std.testing.allocator;
+    try db.init(alloc, .{}, .{});
+    defer db.deinit();
 
-    // Intentionally false assertion to cause test failure
-    try std.testing.expect(false);
+    var tx = try db.begin();
+    defer tx.rollback();
+
+    try tx.queryExecute(void, alloc, "CREATE TABLE IF NOT EXISTS test_tx_temp (id SERIAL PRIMARY KEY, name TEXT)");
+    try tx.commit();
+
+    const result = try db.query(void, alloc, "DROP TABLE IF EXISTS test_tx_temp");
+    _ = result;
 }

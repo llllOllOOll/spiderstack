@@ -9,9 +9,6 @@ pub fn build(b: *std.Build) void {
     const spider_mod = spider_dep.module("spider");
 
     // ── core ──────────────────────────────────────────────────────────
-    // Usado em main.zig via @import("core"):
-    //   core.db.migrations  →  src/core/db/migrations.zig
-    //   core.middleware      →  src/core/middleware/mod.zig
     const core_mod = b.createModule(.{
         .root_source_file = b.path("src/core/mod.zig"),
         .target = target,
@@ -21,9 +18,6 @@ pub fn build(b: *std.Build) void {
     });
 
     // ── features ──────────────────────────────────────────────────────
-    // Usado em main.zig via @import("features/mod.zig").
-    // auth e home são resolvidos internamente por features via
-    // @import relativo — não precisam ser módulos do build.
     const features_mod = b.createModule(.{
         .root_source_file = b.path("src/features/mod.zig"),
         .target = target,
@@ -44,12 +38,9 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    // Apenas o que main.zig importa via @import("nome")
     exe.root_module.addImport("spider", spider_mod);
     exe.root_module.addImport("core", core_mod);
     exe.root_module.addImport("features", features_mod);
-
-    // PostgreSQL via libpq (usado por spider.pg)
     exe.root_module.linkSystemLibrary("pq", .{});
 
     b.installArtifact(exe);
@@ -62,9 +53,34 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    // ── Testes ────────────────────────────────────────────────────────
-    const exe_tests = b.addTest(.{ .root_module = exe.root_module });
-    const run_exe_tests = b.addRunArtifact(exe_tests);
-    const test_step = b.step("test", "Run tests");
-    test_step.dependOn(&run_exe_tests.step);
+    // ── Testes unitários (sem banco) ──────────────────────────────────
+    // zig build test
+    const unit_tests = b.addTest(.{ .root_module = exe.root_module });
+    const run_unit_tests = b.addRunArtifact(unit_tests);
+    const test_step = b.step("test", "Run unit tests");
+    test_step.dependOn(&run_unit_tests.step);
+
+    // ── Testes de integração (requer banco no ar) ─────────────────────
+    // zig build test-integration
+    const integration_mod = b.createModule(.{
+        .root_source_file = b.path("src/core/db/integration_test.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .imports = &.{
+            .{ .name = "spider", .module = spider_mod },
+            .{ .name = "core", .module = core_mod },
+        },
+    });
+
+    const integration_tests = b.addTest(.{ .root_module = integration_mod });
+    integration_tests.root_module.linkSystemLibrary("pq", .{});
+
+    const run_integration_tests = b.addRunArtifact(integration_tests);
+
+    // Não falha o build se o banco não estiver disponível em CI
+    run_integration_tests.has_side_effects = true;
+
+    const integration_step = b.step("test-integration", "Run integration tests (requires DB)");
+    integration_step.dependOn(&run_integration_tests.step);
 }

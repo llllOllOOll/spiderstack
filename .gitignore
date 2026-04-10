@@ -14,6 +14,9 @@ node_modules/
 # Zig packages
 zig-pkg/
 
+# Documentation
+DOCS/
+
 # Zig specific
 build/
 
