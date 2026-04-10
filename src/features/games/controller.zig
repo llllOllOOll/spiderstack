@@ -30,7 +30,7 @@ pub fn index(alloc: std.mem.Allocator, req: *Request) !Response {
     return spider.renderView(alloc, req, view, context);
 }
 
-pub fn handleCreate(alloc: std.mem.Allocator, req: *Request) !Response {
+pub fn create(alloc: std.mem.Allocator, req: *Request) !Response {
     var form = try req.form(alloc);
     defer form.deinit();
 
@@ -49,7 +49,7 @@ pub fn handleCreate(alloc: std.mem.Allocator, req: *Request) !Response {
     return Response.redirect(alloc, "/games");
 }
 
-pub fn handleUpdate(alloc: std.mem.Allocator, req: *Request) !Response {
+pub fn update(alloc: std.mem.Allocator, req: *Request) !Response {
     const id_str = req.params.get("id") orelse "";
     const id = try std.fmt.parseInt(i32, id_str, 10);
 
@@ -71,7 +71,7 @@ pub fn handleUpdate(alloc: std.mem.Allocator, req: *Request) !Response {
     return Response.redirect(alloc, "/games");
 }
 
-pub fn handleDelete(alloc: std.mem.Allocator, req: *Request) !Response {
+pub fn delete(alloc: std.mem.Allocator, req: *Request) !Response {
     const id_str = req.params.get("id") orelse "";
     const id = try std.fmt.parseInt(i32, id_str, 10);
 

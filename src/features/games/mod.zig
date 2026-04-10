@@ -5,6 +5,6 @@ pub const presenter = @import("presenter.zig");
 pub const controller = @import("controller.zig");
 
 pub const index = controller.index;
-pub const handleCreate = controller.handleCreate;
-pub const handleUpdate = controller.handleUpdate;
-pub const handleDelete = controller.handleDelete;
+pub const create = controller.create;
+pub const update = controller.update;
+pub const delete = controller.delete;

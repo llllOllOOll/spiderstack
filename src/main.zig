@@ -30,9 +30,9 @@ pub fn main(init: std.process.Init) !void {
         .get("/auth/google", auth.controller.redirectToGoogle)
         .get("/auth/google/callback", auth.controller.googleCallback)
         .use(middleware.auth)
-        .post("/games/create", games.controller.handleCreate)
-        .post("/games/:id/update", games.controller.handleUpdate)
-        .post("/games/:id/delete", games.controller.handleDelete)
+        .post("/games/create", games.controller.create)
+        .post("/games/:id/update", games.controller.update)
+        .post("/games/:id/delete", games.controller.delete)
         .get("/", home.controller.index)
         .get("/games", games.controller.index)
         .listen() catch |err| {
