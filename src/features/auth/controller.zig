@@ -75,7 +75,7 @@ pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
     // 2. Find or create user
     const user = try use_case.findOrCreateOAuthUser(arena_allocator, profile);
 
-    // 3. Generate JWT token
+    // 3. Generate JWT token (arena is fine now - jwtVerify will copy strings)
     const jwt_secret = std.c.getenv("JWT_SECRET") orelse return error.MissingJwtSecret;
     var tv: std.c.timeval = undefined;
     _ = std.c.gettimeofday(&tv, null);
@@ -83,6 +83,7 @@ pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
     const token = try auth.jwtSign(arena_allocator, AppClaims{
         .sub = user.id,
         .email = user.email,
+        .name = user.name,
         .locale = user.locale,
         .locale_set = user.locale_set,
         .exp = exp,

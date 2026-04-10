@@ -10,6 +10,7 @@ const auth = spider.auth;
 pub const AppClaims = struct {
     sub: i32,
     email: []const u8,
+    name: []const u8,
     locale: []const u8,
     locale_set: bool,
     exp: i64,
@@ -80,7 +81,7 @@ pub fn authMiddleware(alloc: std.mem.Allocator, req: *Request, next: NextFn) !Re
         return Response.redirect(alloc, "/login");
 
     // ── Resolve locale: JWT preference > Accept-Language header ──────
-    const locale = if (claims.locale_set)
+    const resolved_locale = if (claims.locale_set)
         claims.locale
     else
         localeFromHeader(req);
@@ -88,11 +89,19 @@ pub fn authMiddleware(alloc: std.mem.Allocator, req: *Request, next: NextFn) !Re
     // ── Inject into req.params ────────────────────────────────────────
     const user_id = try std.fmt.allocPrint(alloc, "{d}", .{claims.sub});
     const email = try alloc.dupe(u8, claims.email);
+    const user_name = try alloc.dupe(u8, claims.name);
+    const user_locale = if (claims.locale_set)
+        try alloc.dupe(u8, claims.locale)
+    else
+        try alloc.dupe(u8, resolved_locale);
     alloc.free(claims.email);
+    alloc.free(claims.name);
+    alloc.free(claims.locale);
 
     try req.params.put(alloc, try alloc.dupe(u8, "_user_id"), user_id);
     try req.params.put(alloc, try alloc.dupe(u8, "_user_email"), email);
-    try req.params.put(alloc, try alloc.dupe(u8, "_locale"), try alloc.dupe(u8, locale));
+    try req.params.put(alloc, try alloc.dupe(u8, "_user_name"), user_name);
+    try req.params.put(alloc, try alloc.dupe(u8, "_locale"), user_locale);
 
     return next(alloc, req);
 }

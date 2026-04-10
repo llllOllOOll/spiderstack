@@ -1,10 +1,10 @@
 {% block "base" %}
 <!DOCTYPE html>
-<html lang="{{ locale | default:"pt-BR" }}" data-theme="dark">
+<html lang="{{ base.locale | default:"pt-BR" }}" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title | default:"ZigApp" }}</title>
+  <title>{{ title | default:"SpiderStack" }}</title>
   <link href="/css/app.css" rel="stylesheet">
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -14,14 +14,14 @@
   <!-- Top Bar (Mobile) -->
   <div class="fixed top-0 left-0 right-0 z-50 bg-zinc-900 border-b border-zinc-800 lg:hidden">
     <div class="flex items-center justify-between px-4 h-14">
-      <a href="/" class="font-bold text-xl tracking-tighter">ZigApp</a>
+      <a href="/" class="font-bold text-xl tracking-tighter">SpiderStack</a>
       <div class="flex items-center gap-3">
         <div class="text-right text-sm">
-          <div class="font-medium">{{ user_name | default:"Guest" }}</div>
-          <div class="text-xs text-zinc-400">{{ user_email | default:"user@email.com" }}</div>
+          <!-- <div class="font-medium">{{ base.user_name | default:"Guest" }}</div> -->
+          <div class="text-xs text-zinc-400">{{ base.user_email | default:"user@email.com" }}</div>
         </div>
         <div class="w-9 h-9 rounded-2xl bg-yellow-400 flex items-center justify-center text-zinc-950 font-bold text-lg">
-          {{ user_initials | default:"G" }}
+          {{ base.user_initials | default:"G" }}
         </div>
       </div>
     </div>
@@ -37,26 +37,26 @@
     <div class="px-3 mt-4">
       <div class="flex items-center gap-3 px-4 py-3 bg-zinc-800 rounded-2xl mx-2">
         <div class="w-10 h-10 rounded-2xl bg-yellow-400 flex items-center justify-center text-zinc-950 font-bold text-xl">
-          {{ user_initials | default:"G" }}
+          {{ base.user_initials | default:"G" }}
         </div>
         <div>
-          <div class="font-medium">{{ user_name | default:"Guest" }}</div>
-          <div class="text-xs text-zinc-400">{{ user_email | default:"user@email.com" }}</div>
+          <div class="font-medium">{{ base.user_name | default:"Guest" }}</div>
+          <div class="text-xs text-zinc-400">{{ base.user_email | default:"user@email.com" }}</div>
         </div>
       </div>
     </div>
     <nav class="flex-1 px-3 py-6 space-y-1">
       <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-zinc-800 text-yellow-400">
-        🏠 <span>Home</span>
+        🏠 <span>{{ base.nav_overview }}</span>
       </a>
       <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-zinc-800">
-        👤 <span>Perfil</span>
+        👤 <span>{{ base.nav_profile }}</span>
       </a>
       <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-zinc-800">
-        🔍 <span>Buscar</span>
+        🔍 <span>{{ base.nav_search }}</span>
       </a>
       <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-zinc-800">
-        ⚙️ <span>Configurações</span>
+        ⚙️ <span>{{ base.nav_settings }}</span>
       </a>
     </nav>
   </div>
@@ -71,22 +71,22 @@
     <div class="flex justify-around items-center h-16">
       <a href="/" class="flex flex-col items-center text-yellow-400" hx-get="/" hx-target="#main" hx-push-url="true">
         <span class="text-2xl">🏠</span>
-        <span class="text-[10px]">Home</span>
+        <span class="text-[10px]">{{ base.nav_overview }}</span>
       </a>
       <a href="/profile" class="flex flex-col items-center text-zinc-400" hx-get="/profile" hx-target="#main" hx-push-url="true">
         <span class="text-2xl">👤</span>
-        <span class="text-[10px]">Perfil</span>
+        <span class="text-[10px]">{{ base.nav_profile }}</span>
       </a>
       <button onclick="document.getElementById('modal-new').showModal()" class="btn btn-circle bg-yellow-400 text-zinc-950 -mt-7 w-14 h-14 shadow-2xl flex items-center justify-center">
         <span class="text-3xl">+</span>
       </button>
       <a href="#" class="flex flex-col items-center text-zinc-400">
         <span class="text-2xl">🔍</span>
-        <span class="text-[10px]">Buscar</span>
+        <span class="text-[10px]">{{ base.nav_search }}</span>
       </a>
       <a href="#" class="flex flex-col items-center text-zinc-400">
         <span class="text-2xl">⋯</span>
-        <span class="text-[10px]">Mais</span>
+        <span class="text-[10px]">{{ base.nav_settings }}</span>
       </a>
     </div>
   </nav>
