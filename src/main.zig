@@ -5,6 +5,7 @@ const features = @import("features");
 
 const auth = features.auth;
 const home = features.home;
+const games = features.games;
 const db = @import("spider").pg;
 const migrations = core.db.migrations;
 const middleware = core.middleware;
@@ -30,6 +31,10 @@ pub fn main(init: std.process.Init) !void {
         .get("/auth/google/callback", auth.controller.googleCallback)
         .use(middleware.auth)
         .get("/", home.controller.index)
+        .get("/games", games.controller.index)
+        .post("/games/create", games.controller.handleCreate)
+        .post("/games/{id}/update", games.controller.handleUpdate)
+        .post("/games/{id}/delete", games.controller.handleDelete)
         .listen() catch |err| {
         std.log.err("server error: {}", .{err});
         return err;

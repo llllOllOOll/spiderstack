@@ -57,4 +57,15 @@ pub const strings = .{
     .month_short_oct = "out",
     .month_short_nov = "nov",
     .month_short_dec = "dez",
+
+    // Games
+    .games_title = "Top 50 Games",
+    .games_empty = "Nenhum jogo encontrado",
+    .games_name = "Nome",
+    .games_platform = "Plataforma",
+    .games_year = "Ano",
+    .games_genre = "Gênero",
+    .games_developer = "Desenvolvedora",
+    .games_sales = "Vendas",
+    .games_rating = "Nota",
 };

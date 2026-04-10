@@ -16,6 +16,10 @@ const MIGRATIONS = [_]Migration{
         .version = "20260408000002",
         .sql_file = @embedFile("./migrations/20260408000002_create_schema_migrations.sql"),
     },
+    .{
+        .version = "20260410120001",
+        .sql_file = @embedFile("./migrations/20260410120001_create_games.sql"),
+    },
 };
 
 fn extractUpSection(sql_file: []const u8) []const u8 {
