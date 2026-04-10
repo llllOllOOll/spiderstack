@@ -5,29 +5,41 @@ const Response = spider.Response;
 const Request = spider.Request;
 const auth = spider.auth;
 const google = spider.google;
-const http_client = spider.http_client;
 
-const presenter = @import("presenter/mod.zig");
+const presenter = @import("presenter.zig");
 const repository = @import("repository.zig");
 const model = @import("model.zig");
+const service = @import("service.zig");
+const use_case = @import("use_case/index.zig");
+const config = @import("mod.zig");
 const AppClaims = @import("core").middleware.AppClaims;
+const i18n = @import("core").i18n;
 
 const view = @embedFile("views/login.html");
 
-fn getGoogleConfig() google.GoogleConfig {
-    return .{
-        .client_id = std.mem.span(std.c.getenv("GOOGLE_CLIENT_ID") orelse @panic("GOOGLE_CLIENT_ID not set")),
-        .client_secret = std.mem.span(std.c.getenv("GOOGLE_CLIENT_SECRET") orelse @panic("GOOGLE_CLIENT_SECRET not set")),
-        .redirect_uri = std.mem.span(std.c.getenv("GOOGLE_REDIRECT_URI") orelse "http://localhost:8080/auth/google/callback"),
-    };
+fn resolveLocale(req: *Request) i18n.Locale {
+    const raw = req.headers.get("Accept-Language") orelse return .pt_BR;
+    std.log.info("Accept-Language header: {s}", .{raw});
+    const end = std.mem.indexOfAny(u8, raw, ",;") orelse raw.len;
+    const tag = std.mem.trim(u8, raw[0..end], " ");
+    if (tag.len == 0) return .pt_BR;
+    const locale = i18n.localeFromStr(tag);
+    std.log.info("Resolved locale: {}", .{locale});
+    return locale;
 }
 
-pub fn index(alloc: std.mem.Allocator, _: *Request) !Response {
-    // Simple test data
-    const data = .{
-        .locale = "pt-BR",
-        .tagline = "Zig + Spider + Tailwind + HTMX",
-    };
+fn requireAuth(alloc: std.mem.Allocator, req: *Request) !void {
+    const cookie_header = req.headers.get("Cookie") orelse return error.Unauthorized;
+    const token = auth.cookieGet(cookie_header) orelse return error.Unauthorized;
+    const jwt_secret = std.c.getenv("JWT_SECRET") orelse return error.MissingJwtSecret;
+    _ = try auth.jwtVerify(AppClaims, alloc, token, std.mem.span(jwt_secret));
+}
+
+pub fn index(alloc: std.mem.Allocator, req: *Request) !Response {
+    const locale = resolveLocale(req);
+    const email = req.params.get("_user_email") orelse "";
+
+    const data = try presenter.buildLoginContext(alloc, locale, email, null);
     return spider.render(alloc, view, data);
 }
 
@@ -57,11 +69,11 @@ pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
     };
 
     // 1. Exchange code for access token
-    const config = getGoogleConfig();
-    const profile = try fetchGoogleProfile(arena_allocator, code, config);
+    const googleConfig = config.getGoogleConfig();
+    const profile = try service.fetchGoogleProfile(arena_allocator, code, googleConfig);
 
     // 2. Find or create user
-    const user = try findOrCreateOAuthUser(arena_allocator, profile);
+    const user = try use_case.findOrCreateOAuthUser(arena_allocator, profile);
 
     // 3. Generate JWT token
     const jwt_secret = std.c.getenv("JWT_SECRET") orelse return error.MissingJwtSecret;
@@ -82,67 +94,6 @@ pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
     try response.headers.set(arena_allocator, "Set-Cookie", cookie_value);
 
     return response;
-}
-
-fn fetchGoogleProfile(alloc: std.mem.Allocator, code: []const u8, config: google.GoogleConfig) !google.GoogleProfile {
-    var arena = std.heap.ArenaAllocator.init(alloc);
-    defer arena.deinit();
-    const arena_allocator = arena.allocator();
-    const token_body = try std.fmt.allocPrint(
-        arena_allocator,
-        "code={s}&client_id={s}&client_secret={s}&redirect_uri={s}&grant_type=authorization_code",
-        .{ code, config.client_id, config.client_secret, config.redirect_uri },
-    );
-    const token_resp = try http_client.post(
-        arena_allocator,
-        "https://oauth2.googleapis.com/token",
-        token_body,
-        "application/x-www-form-urlencoded",
-    );
-    const TokenResponse = struct { access_token: []const u8 };
-    const parsed_token = try std.json.parseFromSlice(TokenResponse, arena_allocator, token_resp, .{ .ignore_unknown_fields = true });
-    defer parsed_token.deinit();
-    const bearer = try std.fmt.allocPrint(arena_allocator, "Bearer {s}", .{parsed_token.value.access_token});
-    const headers = [_]std.http.Header{.{ .name = "Authorization", .value = bearer }};
-    const profile_resp = try http_client.get(
-        arena_allocator,
-        "https://www.googleapis.com/oauth2/v2/userinfo",
-        &headers,
-    );
-    const RawProfile = struct {
-        id: []const u8,
-        email: []const u8,
-        name: []const u8,
-        picture: []const u8,
-    };
-    const parsed = try std.json.parseFromSlice(RawProfile, arena_allocator, profile_resp, .{ .ignore_unknown_fields = true });
-    defer parsed.deinit();
-    return google.GoogleProfile{
-        .id = try arena_allocator.dupe(u8, parsed.value.id),
-        .email = try arena_allocator.dupe(u8, parsed.value.email),
-        .name = try arena_allocator.dupe(u8, parsed.value.name),
-        .picture = try arena_allocator.dupe(u8, parsed.value.picture),
-    };
-}
-
-fn findOrCreateOAuthUser(alloc: std.mem.Allocator, profile: google.GoogleProfile) !model.User {
-    // Try to find by Google ID first
-    if (try repository.findByGoogleId(alloc, profile.id)) |user| {
-        return user;
-    }
-
-    // Try to find by email
-    if (try repository.findByEmail(alloc, profile.email)) |user| {
-        // Update with Google ID
-        const updated_user = try repository.updateUser(alloc, user.id, .{
-            .google_id = profile.id,
-            .avatar_url = profile.picture,
-        });
-        return updated_user;
-    }
-
-    // Create new user
-    return repository.createOAuthUser(alloc, profile.email, profile.name, profile.id, profile.picture);
 }
 
 pub fn handleLogin(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {

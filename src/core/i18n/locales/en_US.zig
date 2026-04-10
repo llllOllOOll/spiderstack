@@ -19,4 +19,36 @@ pub const strings = .{
 
     // Auth
     .login_google_button = "Continue with Google",
+    .login_title = "Sign In",
+    .login_subtitle = "Use your Google account to continue",
+    .login_terms = "By signing in, you agree to our Terms of Service",
+    .login_footer = "Powered by Spider Framework",
+
+    // Months full
+    .month_jan = "January",
+    .month_feb = "February",
+    .month_mar = "March",
+    .month_apr = "April",
+    .month_may = "May",
+    .month_jun = "June",
+    .month_jul = "July",
+    .month_aug = "August",
+    .month_sep = "September",
+    .month_oct = "October",
+    .month_nov = "November",
+    .month_dec = "December",
+
+    // Months abbreviated
+    .month_short_jan = "jan",
+    .month_short_feb = "feb",
+    .month_short_mar = "mar",
+    .month_short_apr = "apr",
+    .month_short_may = "may",
+    .month_short_jun = "jun",
+    .month_short_jul = "jul",
+    .month_short_aug = "aug",
+    .month_short_sep = "sep",
+    .month_short_oct = "oct",
+    .month_short_nov = "nov",
+    .month_short_dec = "dec",
 };
