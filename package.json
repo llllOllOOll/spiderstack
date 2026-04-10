@@ -1,7 +1,14 @@
 {
-  "name": "basic",
+  "name": "spiderstack",
   "version": "1.0.0",
   "main": "index.js",
+  "description": "Spider Web Framework demo application",
+  "author": "Seven <7b37b3@gmail.com>",
+  "homepage": "https://www.spiderme.org/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/llllOllOOll/spiderstack"
+  },
   "directories": {
     "test": "tests"
   },
