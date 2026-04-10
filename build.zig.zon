@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.16.0-dev.2984+cb7d2b056",
     .dependencies = .{
         .spider = .{
-            .url = "git+https://github.com/llllOllOOll/spider#cd9e45e7472b3d9ce0ea56c1f6dff2494f42e30e",
-            .hash = "spider-0.3.0-RIctlaI2BABOgL8-sxLfRZ-Xr2ffQ4_IWkv7mv__UyU6",
+            .url = "git+https://github.com/llllOllOOll/spider#640fb0ffaf7f6d0ecdc4c047b3abe053842f3260",
+            .hash = "spider-0.3.0-RIctlV84BABT0jQUOdG0O9adAr_GQICrBMkca1MXdrIL",
         },
     },
     .paths = .{
