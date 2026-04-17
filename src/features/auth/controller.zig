@@ -37,9 +37,8 @@ fn requireAuth(alloc: std.mem.Allocator, req: *Request) !void {
 
 pub fn index(alloc: std.mem.Allocator, req: *Request) !Response {
     const locale = resolveLocale(req);
-    const email = req.params.get("_user_email") orelse "";
 
-    const data = try presenter.buildLoginContext(alloc, locale, email, null);
+    const data = try presenter.buildLoginContext(alloc, req, locale, "", null);
     return spider.render(alloc, view, data);
 }
 

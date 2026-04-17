@@ -11,11 +11,7 @@ pub fn index(alloc: std.mem.Allocator, req: *Request) !Response {
     const locale_raw = req.locale orelse "pt-BR";
     const locale = i18n.localeFromStr(locale_raw);
 
-    const user_id = req.params.get("_user_id") orelse "";
-    const user_email = req.params.get("_user_email") orelse "";
-    const user_name = req.params.get("_user_name") orelse "";
-
-    const context = try presenter.buildHomeContext(alloc, locale, user_id, user_email, user_name);
+    const context = try presenter.buildHomeContext(alloc, req, locale);
 
     return spider.renderView(alloc, req, home_content, context);
 }

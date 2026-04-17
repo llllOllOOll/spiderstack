@@ -86,19 +86,21 @@ pub fn authMiddleware(alloc: std.mem.Allocator, req: *Request, next: NextFn) !Re
     else
         localeFromHeader(req);
 
-    // ── Inject into req.params ────────────────────────────────────────
-    const user_id = try std.fmt.allocPrint(alloc, "{d}", .{claims.sub});
-    const email = try alloc.dupe(u8, claims.email);
-    const user_name = try alloc.dupe(u8, claims.name);
+    // ── Inject into req.user (NEW) and req.params (DEPRECATED) ────────
+    req.locale = resolved_locale;
+    req.user = .{
+        .id = try std.fmt.allocPrint(alloc, "{d}", .{claims.sub}),
+        .email = try alloc.dupe(u8, claims.email),
+        .name = try alloc.dupe(u8, claims.name),
+    };
     alloc.free(claims.email);
     alloc.free(claims.name);
     alloc.free(claims.locale);
 
-    req.locale = resolved_locale;
-
-    try req.params.put(alloc, try alloc.dupe(u8, "_user_id"), user_id);
-    try req.params.put(alloc, try alloc.dupe(u8, "_user_email"), email);
-    try req.params.put(alloc, try alloc.dupe(u8, "_user_name"), user_name);
+    // DEPRECATED: usar req.user.id/email/name ao invés disso
+    try req.params.put(alloc, try alloc.dupe(u8, "_user_id"), try alloc.dupe(u8, req.user.id.?));
+    try req.params.put(alloc, try alloc.dupe(u8, "_user_email"), try alloc.dupe(u8, req.user.email.?));
+    try req.params.put(alloc, try alloc.dupe(u8, "_user_name"), try alloc.dupe(u8, req.user.name.?));
 
     return next(alloc, req);
 }

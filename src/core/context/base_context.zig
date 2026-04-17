@@ -1,7 +1,7 @@
 const std = @import("std");
+const spider = @import("spider");
+const Request = spider.Request;
 const i18n = @import("../i18n/mod.zig");
-// const User = @import("../models/user.zig").User;
-// const getInitials = @import("../helpers.zig").getInitials;
 
 pub const BaseContext = struct {
     locale: i18n.Locale,
@@ -27,11 +27,12 @@ pub const BaseContext = struct {
 
 /// Builds the base layout context for rendering.
 ///
+/// Reads user info directly from req.user - no need to pass user separately.
 /// All fields are either static strings (i18n keys resolved at comptime),
-/// slices borrowed from `user` (owned by the caller), or value types ([2]u8).
+/// slices borrowed from req.user (owned by the caller), or value types ([2]u8).
 /// No heap allocation is needed, so `arena` is intentionally unused.
 /// If future fields require dynamic formatting, use `arena` at that point.
-pub fn build(_: std.mem.Allocator, user: anytype, locale: i18n.Locale) !BaseContext {
+pub fn build(_: std.mem.Allocator, req: *Request, locale: i18n.Locale) !BaseContext {
     return BaseContext{
         .locale = locale,
         .nav_overview = i18n.t(locale, "nav_overview"),
@@ -47,10 +48,10 @@ pub fn build(_: std.mem.Allocator, user: anytype, locale: i18n.Locale) !BaseCont
         .nav_settings = i18n.t(locale, "nav_settings"),
         .dropdown_profile = i18n.t(locale, "dropdown_profile"),
         .dropdown_logout = i18n.t(locale, "dropdown_logout"),
-        .user_name = user.name,
-        .user_email = user.email,
-        .user_avatar = user.avatar_url orelse "",
-        .user_initials = getInitials(user.name),
+        .user_name = req.user.name orelse "",
+        .user_email = req.user.email orelse "",
+        .user_avatar = req.user.name orelse "",
+        .user_initials = getInitials(req.user.name orelse ""),
         .dashboard_empty_month = i18n.t(locale, "dashboard_empty_month"),
     };
 }

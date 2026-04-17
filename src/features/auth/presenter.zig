@@ -1,4 +1,6 @@
 const std = @import("std");
+const spider = @import("spider");
+const Request = spider.Request;
 const i18n = @import("core").i18n;
 const base_context = @import("core").context.base_context;
 
@@ -16,15 +18,13 @@ pub const LoginContext = struct {
 
 pub fn buildLoginContext(
     alloc: std.mem.Allocator,
+    req: *Request,
     locale: i18n.Locale,
     email: []const u8,
     error_msg: ?[]const u8,
 ) !LoginContext {
-    const base = try base_context.build(alloc, .{
-        .name = "",
-        .email = email,
-        .avatar_url = null,
-    }, locale);
+    _ = email; // email not used in base context for public routes
+    const base = try base_context.build(alloc, req, locale);
 
     const html_lang = switch (locale) {
         .pt_BR => "pt-BR",
