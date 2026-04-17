@@ -2,11 +2,12 @@ const std = @import("std");
 const spider = @import("spider");
 const Response = spider.Response;
 const Request = spider.Request;
+const core = @import("core");
 
 const model = @import("model.zig");
 const repository = @import("repository.zig");
 const presenter = @import("presenter.zig");
-const i18n = @import("core").i18n;
+const i18n = core.i18n;
 
 const view = @embedFile("views/index.html");
 
@@ -29,8 +30,7 @@ pub fn create(alloc: std.mem.Allocator, req: *Request) !Response {
 }
 
 pub fn update(alloc: std.mem.Allocator, req: *Request) !Response {
-    const id_str = req.params.get("id") orelse "";
-    const id = try std.fmt.parseInt(i32, id_str, 10);
+    const id = try core.utils.parseIdFromRequest(req);
 
     const updates = try req.parseForm(alloc, model.UpdateInput);
 
@@ -40,8 +40,7 @@ pub fn update(alloc: std.mem.Allocator, req: *Request) !Response {
 }
 
 pub fn delete(alloc: std.mem.Allocator, req: *Request) !Response {
-    const id_str = req.params.get("id") orelse "";
-    const id = try std.fmt.parseInt(i64, id_str, 10);
+    const id = try core.utils.parseIdFromRequest(req);
 
     try repository.delete(alloc, id);
 
