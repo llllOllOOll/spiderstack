@@ -247,7 +247,7 @@ test "monthShort returns empty for invalid month" {
 }
 
 pub fn resolveLocale(user: anytype, req: *Request) Locale {
-    const header_locale = req.params.get("_locale");
+    const header_locale = req.locale;
     return if (user.locale_set)
         localeFromStr(user.locale)
     else if (header_locale) |hl|

@@ -50,7 +50,7 @@ fn localeFromHeader(req: *Request) []const u8 {
 pub fn authMiddleware(alloc: std.mem.Allocator, req: *Request, next: NextFn) !Response {
     // ── Public routes: skip auth, resolve locale from header ──────────
     if (isPublicPath(req.path)) {
-        try req.params.put(alloc, try alloc.dupe(u8, "_locale"), try alloc.dupe(u8, localeFromHeader(req)));
+        req.locale = localeFromHeader(req);
         return next(alloc, req);
     }
 
@@ -90,18 +90,15 @@ pub fn authMiddleware(alloc: std.mem.Allocator, req: *Request, next: NextFn) !Re
     const user_id = try std.fmt.allocPrint(alloc, "{d}", .{claims.sub});
     const email = try alloc.dupe(u8, claims.email);
     const user_name = try alloc.dupe(u8, claims.name);
-    const user_locale = if (claims.locale_set)
-        try alloc.dupe(u8, claims.locale)
-    else
-        try alloc.dupe(u8, resolved_locale);
     alloc.free(claims.email);
     alloc.free(claims.name);
     alloc.free(claims.locale);
 
+    req.locale = resolved_locale;
+
     try req.params.put(alloc, try alloc.dupe(u8, "_user_id"), user_id);
     try req.params.put(alloc, try alloc.dupe(u8, "_user_email"), email);
     try req.params.put(alloc, try alloc.dupe(u8, "_user_name"), user_name);
-    try req.params.put(alloc, try alloc.dupe(u8, "_locale"), user_locale);
 
     return next(alloc, req);
 }
