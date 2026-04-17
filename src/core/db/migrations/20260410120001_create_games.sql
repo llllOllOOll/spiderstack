@@ -1,7 +1,7 @@
 -- migrate:up
 
 CREATE TABLE IF NOT EXISTS games (
-    id SERIAL PRIMARY KEY,
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name TEXT NOT NULL,
     platform TEXT NOT NULL,
     release_year INTEGER NOT NULL,

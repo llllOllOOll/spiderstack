@@ -41,7 +41,7 @@ pub fn update(alloc: std.mem.Allocator, req: *Request) !Response {
 
 pub fn delete(alloc: std.mem.Allocator, req: *Request) !Response {
     const id_str = req.params.get("id") orelse "";
-    const id = try std.fmt.parseInt(i32, id_str, 10);
+    const id = try std.fmt.parseInt(i64, id_str, 10);
 
     try repository.delete(alloc, id);
 

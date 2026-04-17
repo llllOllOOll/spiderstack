@@ -6,7 +6,7 @@ const base_context = @import("core").context.base_context;
 const model = @import("model.zig");
 
 pub const GameRow = struct {
-    id: i32,
+    id: i64,
     rank: i32,
     name: []const u8,
     platform: []const u8,

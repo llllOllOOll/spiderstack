@@ -8,7 +8,7 @@ pub fn findAll(alloc: std.mem.Allocator) ![]model.Game {
     return try db.query(model.Game, alloc, sql, .{});
 }
 
-pub fn findById(alloc: std.mem.Allocator, id: i32) !?model.Game {
+pub fn findById(alloc: std.mem.Allocator, id: i64) !?model.Game {
     const sql = "SELECT id, name, platform, release_year, genre, developer, sales_millions, rating FROM games WHERE id = $1 LIMIT 1";
     return try db.queryOne(model.Game, alloc, sql, .{id});
 }
@@ -18,7 +18,7 @@ pub fn create(alloc: std.mem.Allocator, input: model.CreateInput) !?model.Game {
     return try db.queryOne(model.Game, alloc, sql, .{ input.name, input.platform, input.release_year, input.genre, input.developer, input.sales_millions, input.rating });
 }
 
-pub fn update(alloc: std.mem.Allocator, id: i32, updates: model.UpdateInput) !?model.Game {
+pub fn update(alloc: std.mem.Allocator, id: i64, updates: model.UpdateInput) !?model.Game {
     const current = try findById(alloc, id) orelse return null;
 
     const new_name = if (updates.name) |n| n else current.name;
@@ -33,7 +33,7 @@ pub fn update(alloc: std.mem.Allocator, id: i32, updates: model.UpdateInput) !?m
     return try db.queryOne(model.Game, alloc, sql, .{ new_name, new_platform, new_release_year, new_genre, new_developer, new_sales, new_rating, id });
 }
 
-pub fn delete(alloc: std.mem.Allocator, id: i32) !void {
+pub fn delete(alloc: std.mem.Allocator, id: i64) !void {
     const sql = "DELETE FROM games WHERE id = $1";
     _ = try db.query(void, alloc, sql, .{id});
 }

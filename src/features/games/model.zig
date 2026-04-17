@@ -1,5 +1,5 @@
 pub const Game = struct {
-    id: i32,
+    id: i64,
     name: []const u8,
     platform: []const u8,
     release_year: i32,
