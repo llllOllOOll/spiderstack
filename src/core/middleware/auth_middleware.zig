@@ -8,7 +8,7 @@ const NextFn = spider.web.NextFn;
 const auth = spider.auth;
 
 pub const AppClaims = struct {
-    sub: i32,
+    sub: i64,
     email: []const u8,
     name: []const u8,
     locale: []const u8,

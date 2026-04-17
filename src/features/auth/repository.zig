@@ -15,7 +15,7 @@ pub fn findByEmail(alloc: std.mem.Allocator, email: []const u8) !?model.User {
     return result;
 }
 
-pub fn findById(alloc: std.mem.Allocator, id: i32) !?model.User {
+pub fn findById(alloc: std.mem.Allocator, id: i64) !?model.User {
     const sql = "SELECT id, email, name, google_id, avatar_url, created_at, locale, locale_set FROM users WHERE id = $1 LIMIT 1";
     const result = try db.queryOne(model.User, alloc, sql, .{id});
     return result;
@@ -27,7 +27,7 @@ pub fn createOAuthUser(alloc: std.mem.Allocator, email: []const u8, name: []cons
     return result orelse error.UserCreationFailed;
 }
 
-pub fn updateUser(alloc: std.mem.Allocator, user_id: i32, updates: struct {
+pub fn updateUser(alloc: std.mem.Allocator, user_id: i64, updates: struct {
     name: ?[]const u8 = null,
     google_id: ?[]const u8 = null,
     avatar_url: ?[]const u8 = null,
