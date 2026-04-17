@@ -31,18 +31,7 @@ pub fn index(alloc: std.mem.Allocator, req: *Request) !Response {
 }
 
 pub fn create(alloc: std.mem.Allocator, req: *Request) !Response {
-    var form = try req.form(alloc);
-    defer form.deinit();
-
-    const input = model.CreateInput{
-        .name = form.get("name") orelse "",
-        .platform = form.get("platform") orelse "",
-        .release_year = try std.fmt.parseInt(i32, form.get("release_year") orelse "0", 10),
-        .genre = form.get("genre") orelse "",
-        .developer = form.get("developer") orelse "",
-        .sales_millions = std.fmt.parseFloat(f64, form.get("sales_millions") orelse "0") catch 0.0,
-        .rating = std.fmt.parseFloat(f64, form.get("rating") orelse "0") catch 0.0,
-    };
+    const input = try req.parseForm(alloc, model.CreateInput);
 
     _ = try repository.create(alloc, input);
 
@@ -53,18 +42,7 @@ pub fn update(alloc: std.mem.Allocator, req: *Request) !Response {
     const id_str = req.params.get("id") orelse "";
     const id = try std.fmt.parseInt(i32, id_str, 10);
 
-    var form = try req.form(alloc);
-    defer form.deinit();
-
-    const updates = model.UpdateInput{
-        .name = form.get("name"),
-        .platform = form.get("platform"),
-        .release_year = std.fmt.parseInt(i32, form.get("release_year") orelse "0", 10) catch null,
-        .genre = form.get("genre"),
-        .developer = form.get("developer"),
-        .sales_millions = std.fmt.parseFloat(f64, form.get("sales_millions") orelse "0") catch null,
-        .rating = std.fmt.parseFloat(f64, form.get("rating") orelse "0") catch null,
-    };
+    const updates = try req.parseForm(alloc, model.UpdateInput);
 
     _ = try repository.update(alloc, id, updates);
 
