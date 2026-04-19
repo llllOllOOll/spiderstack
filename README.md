@@ -37,16 +37,41 @@ This is a demo project showing how to build a complete web application using the
 - Update existing game
 - Delete game
 
-### 3. Internationalization (i18n)
+### 3. Todo List (CRUD completo com HTMX)
+- List, create, update, delete tasks
+- HTMX for seamless updates without page reload
+- Toggle completed status
+- Dark theme UI
+
+### 4. PWA Support
+- Web manifest for installable app
+- Service worker for offline capability
+- Apple mobile web app support
+- Theme color and icons
+
+### 5. Mobile Drawer Menu (Alpine.js)
+- Slide-in drawer navigation on mobile
+- Alpine.js for reactive UI
+- Smooth transitions
+
+### 6. Skeleton Loading
+- Loading placeholders during navigation
+
+### 7. Template System com chuckBerry
+- Server-side rendering com embedded templates
+- Componentização com partials (topbar, sidebar, bottom_nav, drawer)
+- Layout inheritance
+
+### 8. Internationalization (i18n)
 - Support for Portuguese (pt-BR) and English (en-US)
 - Locale based on Accept-Language header
 - Date and number formatting
 
-### 4. Middleware
+### 9. Middleware
 - JWT authentication
 - Public vs private routes
 
-### 5. Database Migrations
+### 10. Database Migrations
 - Automated migration system
 - Schema version control
 
@@ -64,6 +89,7 @@ spiderstack/
 ├── src/
 │   ├── main.zig                # Entry point - routes and configuration
 │   ├── root.zig               # Root module
+│   ├── embedded_templates.zig # Generated embedded templates
 │   │
 │   ├── core/                   # Core functionality
 │   │   ├── config/           # Configuration
@@ -77,13 +103,18 @@ spiderstack/
 │   ├── features/              # Application features
 │   │   ├── auth/            # Authentication (Google OAuth)
 │   │   ├── games/           # Games CRUD
-│   │   └── home/           # Home page
+│   │   ├── home/           # Home page
+│   │   └── todo/           # Todo list CRUD
 │   │
 │   └── shared/               # Shared templates
 │       └── templates/       # HTML layout, partials
+│           └── partials/   # topbar, sidebar, bottom_nav, drawer
 │
 └── public/
-    └── css/                  # Compiled CSS output
+    ├── css/                  # Compiled CSS output
+    ├── icons/                # PWA icons (192, 512)
+    ├── manifest.json         # PWA manifest
+    └── sw.js                 # Service Worker
 ```
 
 ## How to Run
@@ -153,6 +184,10 @@ zig build test-integration
 | GET | `/login` | Login page | ❌ |
 | GET | `/auth/google` | Redirect to Google | ❌ |
 | GET | `/auth/google/callback` | OAuth callback | ❌ |
+| GET | `/todo` | Todo list | ✅ |
+| POST | `/todo/create` | Create todo | ✅ |
+| POST | `/todo/:id/update` | Update todo | ✅ |
+| POST | `/todo/:id/delete` | Delete todo | ✅ |
 | GET | `/games` | Game list | ✅ |
 | POST | `/games/create` | Create game | ✅ |
 | POST | `/games/:id/update` | Update game | ✅ |
@@ -202,11 +237,30 @@ rating DECIMAL(3,1)
 created_at TIMESTAMPTZ DEFAULT NOW()
 ```
 
+### Table: todos
+```sql
+id SERIAL PRIMARY KEY
+title VARCHAR(255) NOT NULL
+completed BOOLEAN DEFAULT FALSE
+created_at TIMESTAMPTZ DEFAULT NOW()
+updated_at TIMESTAMPTZ DEFAULT NOW()
+```
+
 ## Spider Framework Concepts
 
 ### Initialization
 ```zig
-var server = try spider.Spider.init(arena, io, "127.0.0.1", 8080, .{ .layout = layout });
+const templates = @import("embedded_templates.zig").EmbeddedTemplates;
+
+var server = try spider.Spider.init(arena, io, "127.0.0.1", 8080, .{
+    .templates = templates,
+});
+```
+
+### Embedded Templates (generate-templates)
+Templates are embedded at compile time via `generateEmbeddedTemplates` in build.zig:
+```zig
+gen.addArg("src/embedded_templates.zig");
 ```
 
 ### Routes
@@ -222,8 +276,8 @@ server
 // Redirect
 return Response.redirect(alloc, "/path");
 
-// Render view with context
-return spider.renderView(alloc, req, view_content, context);
+// Render view with chuckBerry (embedded templates)
+return spider.chuckBerry(alloc, req, "home/index", context);
 
 // Text response
 return Response.text(alloc, "message");
@@ -234,8 +288,8 @@ return Response.text(alloc, "message");
 // Simple query
 const result = try db.query(MyStruct, alloc, "SELECT * FROM table", .{});
 
-// Insert/Update
-try db.queryExecute(void, alloc, "INSERT INTO ...", .{});
+// Insert/Update with RETURNING
+const new_row = try db.queryOne(MyStruct, alloc, "INSERT INTO ... RETURNING ...", .{});
 
 // Transaction
 var tx = try db.begin();
