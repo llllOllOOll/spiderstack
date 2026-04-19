@@ -8,10 +8,9 @@ pub const EmbeddedTemplates = struct {
     games_index: []const u8 = @embedFile("features/games/views/index.html"),
     home_index: []const u8 = @embedFile("features/home/views/index.html"),
     todo_index: []const u8 = @embedFile("features/todo/views/index.html"),
-    head: []const u8 = @embedFile("shared/templates/head.html"),
-    layout: []const u8 = @embedFile("shared/templates/layout.html"),
-    partials_navbar: []const u8 = @embedFile("shared/templates/partials/navbar.html"),
+    partials_topbar: []const u8 = @embedFile("shared/templates/partials/topbar.html"),
     partials_sidebar: []const u8 = @embedFile("shared/templates/partials/sidebar.html"),
-    partials_spinner: []const u8 = @embedFile("shared/templates/partials/spinner.html"),
+    partials_bottom_nav: []const u8 = @embedFile("shared/templates/partials/bottom_nav.html"),
+    layout: []const u8 = @embedFile("shared/templates/layout.html"),
 
 };
