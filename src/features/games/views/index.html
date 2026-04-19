@@ -1,11 +1,14 @@
 {% extends "layout"%}
 {% block "content" %}
-<div class="max-w-5xl mx-auto px-4 pb-24 lg:pb-8 pt-2 space-y-5">
+<div x-data="{ 
+  open: false, 
+  game: { id: '', name: '', platform: '', year: '', genre: '', developer: '', sales: '', rating: '' }
+}" class="max-w-5xl mx-auto px-4 pb-24 lg:pb-8 pt-2 space-y-5">
 
   <!-- Header -->
   <div class="flex items-center justify-between mt-8">
     <h1 class="text-2xl font-semibold text-yellow-400 tracking-tight">{{ page_title }}</h1>
-    <button onclick="openAddGameModal()"
+    <button @click="game = { id: '', name: '', platform: '', year: '', genre: '', developer: '', sales: '', rating: '' }; open = true"
             class="bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-semibold text-sm px-4 py-2 rounded-xl flex items-center gap-1.5 transition-colors">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <path d="M12 4.5v15m7.5-7.5h-15"/>
@@ -74,16 +77,12 @@
             </span>
           </div>
           <div class="flex items-center gap-1 flex-shrink-0 ml-1">
-            <button type="button" class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-yellow-400 hover:bg-zinc-800 transition-colors" onclick="openEditGameModal({{ game.id }}, '{{ game.name }}', '{{ game.platform }}', {{ game.release_year }}, '{{ game.genre }}', '{{ game.developer }}', {{ game.sales }}, {{ game.rating }})">
+            <button type="button" class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-yellow-400 hover:bg-zinc-800 transition-colors" @click="game = { id: '{{ game.id }}', name: '{{ game.name }}', platform: '{{ game.platform }}', year: '{{ game.release_year }}', genre: '{{ game.genre }}', developer: '{{ game.developer }}', sales: '{{ game.sales }}', rating: '{{ game.rating }}' }; open = true">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L18 8.625"/>
               </svg>
             </button>
-            <button type="button" class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-red-400 hover:bg-zinc-800 transition-colors" 
-              hx-post="/games/{{ game.id }}/delete" 
-              hx-swap="outerHTML"
-              data-game-id="{{ game.id }}"
-              onclick="deleteGame(this)">
+            <button type="button" class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-red-400 hover:bg-zinc-800 transition-colors" @click="if(confirm('Delete game?')) { fetch('/games/{{ game.id }}/delete', {method:'POST'}).then(() => $el.closest('[id^=game-row-{{ game.id }}]').remove()) }">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                 <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
               </svg>
@@ -140,12 +139,12 @@
             </td>
             <td class="px-5 py-3.5">
               <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-yellow-400 hover:bg-zinc-700 transition-colors">
+                <button class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-yellow-400 hover:bg-zinc-700 transition-colors" @click="game = { id: '{{ game.id }}', name: '{{ game.name }}', platform: '{{ game.platform }}', year: '{{ game.release_year }}', genre: '{{ game.genre }}', developer: '{{ game.developer }}', sales: '{{ game.sales }}', rating: '{{ game.rating }}' }; open = true">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                     <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zM19.5 7.125L18 8.625"/>
                   </svg>
                 </button>
-                <button class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-700 transition-colors" data-game-id="{{ game.id }}" onclick="deleteGame(this)">
+                <button class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-500 hover:text-red-400 hover:bg-zinc-700 transition-colors" @click="if(confirm('Delete game?')) { fetch('/games/{{ game.id }}/delete', {method:'POST'}).then(() => $el.closest('[id^=game-row-{{ game.id }}]').remove()) }">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                     <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>
                   </svg>
@@ -167,131 +166,85 @@
   </div>
   {% endif %}
 
-</div>
-
-<!-- Add/Edit Game Modal -->
-<div id="game-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
-  <div class="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onclick="closeGameModal()"></div>
-  
-  <div class="relative bg-zinc-900 rounded-2xl p-6 w-full max-w-sm border border-zinc-800 shadow-2xl">
+  <!-- Add/Edit Game Modal -->
+  <div x-show="open" x-transition.opacity.duration.300ms
+       class="fixed inset-0 z-50 flex items-center justify-center p-4"
+       @keydown.escape.window="open = false"
+       style="display: none;">
+    <div class="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" @click="open = false"></div>
     
-    <form id="game-form" hx-post="" hx-target="#main" class="space-y-4">
-      <div class="flex items-center justify-between mb-2">
-        <h2 class="text-lg font-semibold text-yellow-400">Add/Edit Game</h2>
-        <button type="button" onclick="closeGameModal()" class="text-zinc-600 hover:text-zinc-400 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
+    <div class="relative bg-zinc-900 rounded-2xl p-6 w-full max-w-sm border border-zinc-800 shadow-2xl" @click.stop>
+      
+      <form :hx-post="game.id ? '/games/'+game.id+'/update' : '/games/create'" hx-target="#main" class="space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-lg font-semibold text-yellow-400">Add/Edit Game</h2>
+          <button type="button" @click="open = false" class="text-zinc-600 hover:text-zinc-400 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
 
-      <input type="hidden" name="id" id="game-id">
+        <input type="hidden" name="id" :value="game.id">
 
-      <div>
-        <label class="block text-zinc-400 text-xs font-medium mb-1.5">Name</label>
-        <input type="text" name="name" id="game-name" required
-               class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Platform</label>
-          <input type="text" name="platform" id="game-platform" required
+          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Name</label>
+          <input type="text" name="name" x-model="game.name" required
                  class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
         </div>
-        <div>
-          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Year</label>
-          <input type="number" name="release_year" id="game-year" required
-                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
-        </div>
-      </div>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Genre</label>
-          <input type="text" name="genre" id="game-genre" required
-                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-zinc-400 text-xs font-medium mb-1.5">Platform</label>
+            <input type="text" name="platform" x-model="game.platform" required
+                   class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+          </div>
+          <div>
+            <label class="block text-zinc-400 text-xs font-medium mb-1.5">Year</label>
+            <input type="number" name="release_year" x-model="game.year" required
+                   class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+          </div>
         </div>
-        <div>
-          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Developer</label>
-          <input type="text" name="developer" id="game-developer" required
-                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
-        </div>
-      </div>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Sales (M)</label>
-          <input type="number" step="0.01" name="sales_millions" id="game-sales"
-                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-zinc-400 text-xs font-medium mb-1.5">Genre</label>
+            <input type="text" name="genre" x-model="game.genre" required
+                   class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+          </div>
+          <div>
+            <label class="block text-zinc-400 text-xs font-medium mb-1.5">Developer</label>
+            <input type="text" name="developer" x-model="game.developer" required
+                   class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+          </div>
         </div>
-        <div>
-          <label class="block text-zinc-400 text-xs font-medium mb-1.5">Rating</label>
-          <input type="number" step="0.1" max="10" name="rating" id="game-rating"
-                 class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
-        </div>
-      </div>
 
-      <div class="flex gap-3 pt-2">
-        <button type="submit"
-                class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-semibold py-2.5 rounded-xl text-sm">
-          Save
-        </button>
-        <button type="button" onclick="closeGameModal()"
-                class="px-5 py-2.5 text-zinc-400 hover:text-white text-sm">
-          Cancel
-        </button>
-      </div>
-    </form>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-zinc-400 text-xs font-medium mb-1.5">Sales (M)</label>
+            <input type="number" step="0.01" name="sales_millions" x-model="game.sales"
+                   class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+          </div>
+          <div>
+            <label class="block text-zinc-400 text-xs font-medium mb-1.5">Rating</label>
+            <input type="number" step="0.1" max="10" name="rating" x-model="game.rating"
+                   class="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm">
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+                  class="flex-1 bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-semibold py-2.5 rounded-xl text-sm">
+            Save
+          </button>
+          <button type="button" @click="open = false"
+                  class="px-5 py-2.5 text-zinc-400 hover:text-white text-sm">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
+
 </div>
-
-<script>
-// Open modal for adding new game
-function openAddGameModal() {
-  document.getElementById('game-id').value = '';
-  document.getElementById('game-name').value = '';
-  document.getElementById('game-platform').value = '';
-  document.getElementById('game-year').value = '';
-  document.getElementById('game-genre').value = '';
-  document.getElementById('game-developer').value = '';
-  document.getElementById('game-sales').value = '';
-  document.getElementById('game-rating').value = '';
-  document.getElementById('game-form').setAttribute('hx-post', '/games/create');
-  htmx.process(document.getElementById('game-form')); // refresh HTMX
-  document.getElementById('game-modal').style.display = 'flex';
-}
-
-// Open modal for editing - preenche campos e muda endpoint
-function openEditGameModal(id, name, platform, year, genre, developer, sales, rating) {
-  console.log('openEditGameModal called, id:', id);
-  document.getElementById('game-id').value = id;
-  document.getElementById('game-name').value = name;
-  document.getElementById('game-platform').value = platform;
-  document.getElementById('game-year').value = year;
-  document.getElementById('game-genre').value = genre;
-  document.getElementById('game-developer').value = developer;
-  document.getElementById('game-sales').value = sales;
-  document.getElementById('game-rating').value = rating;
-  document.getElementById('game-form').setAttribute('hx-post', '/games/' + id + '/update');
-  htmx.process(document.getElementById('game-form')); // refresh HTMX
-  document.getElementById('game-modal').style.display = 'flex';
-}
-
-// Close modal
-function closeGameModal() {
-  document.getElementById('game-modal').style.display = 'none';
-  document.getElementById('game-form').reset();
-}
-
-// Delete game
-function deleteGame(btn) {
-  if (!confirm('Delete game?')) return;
-  const id = btn.getAttribute('data-game-id');
-  fetch('/games/' + id + '/delete', { method: 'POST' })
-    .then(() => {
-      document.querySelectorAll('[id="game-row-' + id + '"]').forEach(el => el.remove());
-    });
-}
-</script>
 {% end %}
