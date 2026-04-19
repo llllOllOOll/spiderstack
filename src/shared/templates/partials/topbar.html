@@ -1,10 +1,14 @@
 <!-- Top Bar (Mobile) -->
 <div class="fixed top-0 left-0 right-0 z-50 bg-zinc-900 border-b border-zinc-800 lg:hidden">
   <div class="flex items-center justify-between px-4 h-14">
+    <button @click="drawerOpen = true" class="p-2 hover:bg-zinc-800 rounded-xl -ml-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
     <a href="/" class="font-bold text-xl tracking-tighter">SpiderStack</a>
     <div class="flex items-center gap-3">
       <div class="text-right text-sm">
-        <!-- <div class="font-medium">{{ base.user_name | default:"Guest" }}</div> -->
         <div class="text-xs text-zinc-400">{{ base.user_email | default:"user@email.com" }}</div>
       </div>
       <div class="w-9 h-9 rounded-2xl bg-yellow-400 flex items-center justify-center text-zinc-950 font-bold text-lg">

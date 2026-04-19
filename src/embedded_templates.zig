@@ -11,6 +11,7 @@ pub const EmbeddedTemplates = struct {
     partials_topbar: []const u8 = @embedFile("shared/templates/partials/topbar.html"),
     partials_sidebar: []const u8 = @embedFile("shared/templates/partials/sidebar.html"),
     partials_bottom_nav: []const u8 = @embedFile("shared/templates/partials/bottom_nav.html"),
+    partials_drawer: []const u8 = @embedFile("shared/templates/partials/drawer.html"),
     layout: []const u8 = @embedFile("shared/templates/layout.html"),
 
 };
