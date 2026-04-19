@@ -1,0 +1,40 @@
+{% extends "layout"%}
+{% block "content" %}
+<div class="max-w-md mx-auto mt-8">
+    <h1 class="text-2xl font-bold mb-4">Todo List</h1>
+    
+    <form method="POST" action="/todo/create" class="mb-4">
+        <div class="flex gap-2">
+            <input type="text" name="title" placeholder="Nova tarefa..." 
+                   class="flex-1 px-3 py-2 border border-gray-300 rounded" required>
+            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Adicionar
+            </button>
+        </div>
+    </form>
+    
+    <div class="space-y-2">
+        {% for todo in todos %}
+            <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
+                <div class="flex items-center gap-3">
+                    <form method="POST" action="/todo/{{ todo.id }}/update">
+                        <input type="hidden" name="completed" value="{% if todo.completed %}false{% else %}true{% endif %}">
+                        <button type="submit" class="w-5 h-5 border border-gray-300 rounded {% if todo.completed %}bg-green-500{% else %}bg-white{% endif %}">
+                            {% if todo.completed %}✓{% endif %}
+                        </button>
+                    </form>
+                    <span class="{% if todo.completed %}line-through text-gray-500{% else %}text-gray-900{% endif %}">
+                        {{ todo.title }}
+                    </span>
+                </div>
+                
+                <form method="POST" action="/todo/{{ todo.id }}/delete">
+                    <button type="submit" class="text-red-500 hover:text-red-700">
+                        ✕
+                    </button>
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% end %}

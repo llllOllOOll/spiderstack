@@ -20,6 +20,10 @@ const MIGRATIONS = [_]Migration{
         .version = "20260410120001",
         .sql_file = @embedFile("./migrations/20260410120001_create_games.sql"),
     },
+    .{
+        .version = "20260417100001",
+        .sql_file = @embedFile("./migrations/20260417100001_create_todos.sql"),
+    },
 };
 
 fn extractUpSection(sql_file: []const u8) []const u8 {

@@ -45,6 +45,11 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(exe);
 
+    const gen = b.addRunArtifact(spider_dep.artifact("generate-templates"));
+    gen.addArg("src/");
+    gen.addArg("src/embedded_templates.zig");
+    exe.step.dependOn(&gen.step);
+
     // ── Run ───────────────────────────────────────────────────────────
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());

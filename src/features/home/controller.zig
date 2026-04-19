@@ -5,13 +5,11 @@ const Request = spider.Request;
 const i18n = @import("core").i18n;
 const presenter = @import("presenter.zig");
 
-const home_content = @embedFile("views/index.html");
-
 pub fn index(alloc: std.mem.Allocator, req: *Request) !Response {
     const locale_raw = req.locale orelse "pt-BR";
     const locale = i18n.localeFromStr(locale_raw);
 
     const context = try presenter.buildHomeContext(alloc, req, locale);
 
-    return spider.renderView(alloc, req, home_content, context);
+    return spider.chuckBerry(alloc, req, "home/index", context);
 }
