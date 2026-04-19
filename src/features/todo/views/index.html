@@ -1,40 +1,45 @@
 {% extends "layout"%}
 {% block "content" %}
-<div class="max-w-md mx-auto mt-8">
-    <h1 class="text-2xl font-bold mb-4">Todo List</h1>
-    
-    <form method="POST" action="/todo/create" class="mb-4">
-        <div class="flex gap-2">
-            <input type="text" name="title" placeholder="Nova tarefa..." 
-                   class="flex-1 px-3 py-2 border border-gray-300 rounded" required>
-            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                Adicionar
-            </button>
-        </div>
-    </form>
-    
-    <div class="space-y-2">
-        {% for todo in todos %}
-            <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
-                <div class="flex items-center gap-3">
-                    <form method="POST" action="/todo/{{ todo.id }}/update">
-                        <input type="hidden" name="completed" value="{% if todo.completed %}false{% else %}true{% endif %}">
-                        <button type="submit" class="w-5 h-5 border border-gray-300 rounded {% if todo.completed %}bg-green-500{% else %}bg-white{% endif %}">
-                            {% if todo.completed %}✓{% endif %}
-                        </button>
-                    </form>
-                    <span class="{% if todo.completed %}line-through text-gray-500{% else %}text-gray-900{% endif %}">
-                        {{ todo.title }}
-                    </span>
-                </div>
-                
-                <form method="POST" action="/todo/{{ todo.id }}/delete">
-                    <button type="submit" class="text-red-500 hover:text-red-700">
-                        ✕
-                    </button>
-                </form>
-            </div>
-        {% endfor %}
+<div class="max-w-md mx-auto px-4 pb-8 pt-2 space-y-5">
+
+  <h1 class="text-2xl font-semibold text-yellow-400 tracking-tight mt-8">Todo List</h1>
+
+  <form hx-post="/todo/create" hx-target="#todo-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
+    <div class="flex gap-2">
+      <input name="title" placeholder="Nova tarefa..."
+             class="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2.5 text-white text-sm" required>
+      <button class="bg-yellow-400 hover:bg-yellow-300 text-zinc-950 font-semibold px-4 py-2.5 rounded-xl text-sm">
+        Adicionar
+      </button>
     </div>
+  </form>
+
+  <div id="todo-list" class="space-y-2">
+    {% for todo in todos %}
+    <div id="todo-{{ todo.id }}" class="flex items-center justify-between p-4 bg-zinc-900 rounded-2xl">
+      <div class="flex items-center gap-3 flex-1 min-w-0">
+        <button hx-post="/todo/{{ todo.id }}/update"
+                hx-vals='{"completed": "{% if todo.completed %}false{% else %}true{% endif %}"}'
+                hx-target="#todo-{{ todo.id }}"
+                hx-swap="outerHTML"
+                class="w-5 h-5 flex items-center justify-center rounded border {% if todo.completed %}bg-green-500 border-green-500 text-zinc-950{% else %}border-zinc-600 hover:border-zinc-400{% endif %} text-sm font-bold">
+          {% if todo.completed %}✓{% endif %}
+        </button>
+        <span class="{% if todo.completed %}line-through text-zinc-500{% else %}text-white{% endif %} text-sm truncate">
+          {{ todo.title }}
+        </span>
+      </div>
+      <button hx-post="/todo/{{ todo.id }}/delete"
+              hx-target="#todo-{{ todo.id }}"
+              hx-swap="outerHTML"
+              class="w-7 h-7 flex items-center justify-center rounded-lg text-zinc-600 hover:text-red-400 hover:bg-zinc-800 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+
 </div>
 {% end %}

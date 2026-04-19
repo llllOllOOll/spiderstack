@@ -19,9 +19,18 @@ pub fn index(alloc: std.mem.Allocator, req: *Request) !Response {
     return spider.chuckBerry(alloc, req, "todo/index", context);
 }
 
+fn isHxRequest(req: *Request) bool {
+    return req.headers.get("HX-Request") != null;
+}
+
 pub fn create(alloc: std.mem.Allocator, req: *Request) !Response {
     const input = try req.parseForm(alloc, model.CreateInput);
-    _ = try repository.create(alloc, input);
+    const todo = (try repository.create(alloc, input)) orelse return Response.text(alloc, "Error creating todo");
+
+    if (isHxRequest(req)) {
+        const context = try presenter.buildItemContext(alloc, req, todo);
+        return spider.chuckBerry(alloc, req, "todo/item_todo", context);
+    }
 
     return Response.redirect(alloc, "/todo");
 }
@@ -29,8 +38,12 @@ pub fn create(alloc: std.mem.Allocator, req: *Request) !Response {
 pub fn update(alloc: std.mem.Allocator, req: *Request) !Response {
     const id = try std.fmt.parseInt(i64, req.params.get("id") orelse "", 10);
     const updates = try req.parseForm(alloc, model.UpdateInput);
+    const todo = (try repository.update(alloc, id, updates)) orelse return Response.text(alloc, "Error updating todo");
 
-    _ = try repository.update(alloc, id, updates);
+    if (isHxRequest(req)) {
+        const context = try presenter.buildItemContext(alloc, req, todo);
+        return spider.chuckBerry(alloc, req, "todo/item_todo", context);
+    }
 
     return Response.redirect(alloc, "/todo");
 }
@@ -39,5 +52,9 @@ pub fn delete(alloc: std.mem.Allocator, req: *Request) !Response {
     const id = try std.fmt.parseInt(i64, req.params.get("id") orelse "", 10);
     try repository.delete(alloc, id);
 
-    return Response.text(alloc, "");
+    if (isHxRequest(req)) {
+        return Response.text(alloc, "");
+    }
+
+    return Response.redirect(alloc, "/todo");
 }
