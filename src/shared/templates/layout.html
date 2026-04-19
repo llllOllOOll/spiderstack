@@ -6,8 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title | default:"SpiderStack" }}</title>
   <link href="/css/app.css" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#facc15">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <script src="/htmx.min.js"></script>
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+    }
+   </script>
 </head>
 <body x-data="{ drawerOpen: false }" @htmx:after-swap.window="drawerOpen = false" class="bg-zinc-950 text-white min-h-screen pb-20 lg:pb-0">
 
