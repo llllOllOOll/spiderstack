@@ -23,7 +23,7 @@
     <!-- Auth Card -->
     <div class="bg-zinc-900 rounded-2xl p-6 shadow-xl">
         <!-- Toggle Login/Register -->
-        <div class="flex bg-zinc-800 rounded-xl p-1 mb-6" x-show="!showForgot">
+        <div class="flex bg-zinc-800 rounded-xl p-1 mb-8" x-show="!showForgot">
             <button 
                 @click="isRegister = false" 
                 :class="!isRegister ? 'bg-zinc-700 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'"
@@ -218,7 +218,7 @@
         </form>
 
         <!-- Divider -->
-        <div x-show="!showForgot" class="relative my-6">
+        <div x-show="!showForgot" class="relative my-6 p-2">
             <div class="absolute inset-0 flex items-center">
                 <div class="w-full border-t border-zinc-700"></div>
             </div>
