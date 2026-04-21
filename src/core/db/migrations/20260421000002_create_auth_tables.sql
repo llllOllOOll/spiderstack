@@ -1,5 +1,5 @@
 -- migrate:up
--- Tabela de identidades (suporta múltiplos providers por usuário)
+-- Identity table (supports multiple providers per user)
 CREATE TABLE IF NOT EXISTS user_identities (
     id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_uuid          UUID NOT NULL REFERENCES users(uuid) ON DELETE CASCADE,
@@ -23,14 +23,14 @@ CREATE TABLE IF NOT EXISTS roles (
     created_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
--- Roles padrão do sistema
+-- Default system roles
 INSERT INTO roles (name, description, is_default) VALUES
     ('admin',  'Acesso total ao sistema',       false),
     ('editor', 'Pode criar e editar conteúdo',  false),
     ('viewer', 'Apenas leitura',                true)
 ON CONFLICT (name) DO NOTHING;
 
--- Tabela pivot: usuário <-> role
+-- Pivot table: user <-> role
 CREATE TABLE IF NOT EXISTS user_roles (
     user_uuid  UUID NOT NULL REFERENCES users(uuid) ON DELETE CASCADE,
     role_id    UUID NOT NULL REFERENCES roles(id)   ON DELETE CASCADE,
@@ -40,14 +40,14 @@ CREATE TABLE IF NOT EXISTS user_roles (
 
 CREATE INDEX IF NOT EXISTS idx_user_roles_user_uuid ON user_roles(user_uuid);
 
--- Tabela de permissões por role
+-- Permissions table per role
 CREATE TABLE IF NOT EXISTS role_permissions (
     role_id    UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     permission TEXT NOT NULL,                  -- formato: 'recurso:acao'
     PRIMARY KEY (role_id, permission)
 );
 
--- Permissões padrão por role
+-- Default permissions per role
 INSERT INTO role_permissions (role_id, permission)
 SELECT r.id, p.permission
 FROM roles r

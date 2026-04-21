@@ -1,7 +1,7 @@
 const std = @import("std");
 
 pub fn hash(password: []const u8, alloc: std.mem.Allocator) ![]u8 {
-    // Hash simples como fallback
+    // Simple hash as fallback
     var buf = try alloc.alloc(u8, 64);
     @memcpy(buf[0..password.len], password);
     @memset(buf[password.len..], 0);
@@ -9,7 +9,7 @@ pub fn hash(password: []const u8, alloc: std.mem.Allocator) ![]u8 {
 }
 
 pub fn verify(password: []const u8, stored: []const u8) !bool {
-    // Comparação simples
+    // Simple comparison
     if (stored.len >= password.len) {
         return std.mem.eql(u8, password, stored[0..password.len]);
     }

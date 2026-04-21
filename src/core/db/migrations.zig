@@ -64,7 +64,7 @@ pub fn run(alloc: std.mem.Allocator) !void {
             .{migration.version},
         );
 
-        // Se não há resultados OU o count é 0, execute a migração
+        // If there are no results OR count is 0, run the migration
         if (checks.len == 0 or checks[0].count == 0) {
             const up_sql = extractUpSection(migration.sql_file);
             if (up_sql.len == 0 or std.mem.trim(u8, up_sql, " \n\r\t").len == 0) {

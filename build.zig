@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // ── Dependência externa: Spider Web Framework ─────────────────────
+    // ── External dependency: Spider Web Framework ─────────────────────
     const spider_dep = b.dependency("spider", .{ .target = target });
     const spider_mod = spider_dep.module("spider");
 
@@ -27,7 +27,7 @@ pub fn build(b: *std.Build) void {
         },
     });
 
-    // ── Executável ────────────────────────────────────────────────────
+    // ── Executable ────────────────────────────────────────────────────
     const exe = b.addExecutable(.{
         .name = "spiderstack",
         .root_module = b.createModule(.{
@@ -58,14 +58,14 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    // ── Testes unitários (sem banco) ──────────────────────────────────
+    // ── Unit tests (no database required) ──────────────────────────────
     // zig build test
     const unit_tests = b.addTest(.{ .root_module = exe.root_module });
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
 
-    // ── Testes de integração (requer banco no ar) ─────────────────────
+    // ── Integration tests (requires running database) ──────────────────
     // zig build test-integration
     const integration_mod = b.createModule(.{
         .root_source_file = b.path("src/core/db/integration_test.zig"),
@@ -83,7 +83,7 @@ pub fn build(b: *std.Build) void {
 
     const run_integration_tests = b.addRunArtifact(integration_tests);
 
-    // Não falha o build se o banco não estiver disponível em CI
+    // Don't fail the build if database is not available in CI
     run_integration_tests.has_side_effects = true;
 
     const integration_step = b.step("test-integration", "Run integration tests (requires DB)");

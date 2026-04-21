@@ -1,7 +1,7 @@
 -- migrate:up
 BEGIN;
 
--- Migra todos os usuários que têm google_id para user_identities
+-- Migrate all users with google_id to user_identities
 INSERT INTO user_identities (user_uuid, provider, provider_user_id, created_at)
 SELECT
     u.uuid,
@@ -12,7 +12,7 @@ FROM users u
 WHERE u.google_id IS NOT NULL
 ON CONFLICT DO NOTHING;
 
--- Atribui role 'viewer' (padrão) para todos os usuários existentes
+-- Assign 'viewer' role (default) to all existing users
 INSERT INTO user_roles (user_uuid, role_id)
 SELECT
     u.uuid,
