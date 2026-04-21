@@ -14,6 +14,8 @@ const use_case = @import("use_case/index.zig");
 const config = @import("mod.zig");
 const AppClaims = @import("core").middleware.AppClaims;
 const i18n = @import("core").i18n;
+const features = @import("core").middleware.features;
+const bcrypt = @import("bcrypt.zig");
 
 const view = @embedFile("views/login.html");
 
@@ -28,6 +30,33 @@ fn resolveLocale(req: *Request) i18n.Locale {
     return locale;
 }
 
+fn generateJwtWithRoles(alloc: std.mem.Allocator, user: model.User) ![]u8 {
+    const jwt_secret = std.c.getenv("JWT_SECRET") orelse return error.MissingJwtSecret;
+
+    const roles = if (features.rbac_enabled)
+        try repository.findUserRoles(alloc, user.uuid)
+    else
+        &[_][]const u8{};
+
+    const permissions = if (features.rbac_enabled)
+        try repository.findUserPermissions(alloc, user.uuid)
+    else
+        &[_][]const u8{};
+
+    const exp: i64 = 1767225600 + (60 * 60 * 24 * 7); // 2026-01-01 + 7 days
+
+    return try auth.jwtSign(alloc, AppClaims{
+        .sub = user.uuid,
+        .email = user.email,
+        .name = user.name,
+        .locale = user.locale,
+        .locale_set = user.locale_set,
+        .exp = exp,
+        .roles = roles,
+        .permissions = permissions,
+    }, std.mem.span(jwt_secret));
+}
+
 fn requireAuth(alloc: std.mem.Allocator, req: *Request) !void {
     const cookie_header = req.headers.get("Cookie") orelse return error.Unauthorized;
     const token = auth.cookieGet(cookie_header) orelse return error.Unauthorized;
@@ -37,7 +66,6 @@ fn requireAuth(alloc: std.mem.Allocator, req: *Request) !void {
 
 pub fn index(alloc: std.mem.Allocator, req: *Request) !Response {
     const locale = resolveLocale(req);
-
     const data = try presenter.buildLoginContext(alloc, req, locale, "", null);
     return spider.render(alloc, view, data);
 }
@@ -58,7 +86,6 @@ pub fn redirectToGoogle(alloc: std.mem.Allocator, _: *Request) !Response {
 }
 
 pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
-    // Initialize ArenaAllocator for this request
     var arena = std.heap.ArenaAllocator.init(alloc);
     defer arena.deinit();
     const arena_allocator = arena.allocator();
@@ -67,28 +94,13 @@ pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
         return Response.redirect(arena_allocator, "/auth/google");
     };
 
-    // 1. Exchange code for access token
     const googleConfig = config.getGoogleConfig();
     const profile = try service.fetchGoogleProfile(arena_allocator, code, googleConfig);
 
-    // 2. Find or create user
     const user = try use_case.findOrCreateOAuthUser(arena_allocator, profile);
 
-    // 3. Generate JWT token (arena is fine now - jwtVerify will copy strings)
-    const jwt_secret = std.c.getenv("JWT_SECRET") orelse return error.MissingJwtSecret;
-    var tv: std.c.timeval = undefined;
-    _ = std.c.gettimeofday(&tv, null);
-    const exp = tv.sec + (60 * 60 * 24 * 7); // 7 days
-    const token = try auth.jwtSign(arena_allocator, AppClaims{
-        .sub = user.id,
-        .email = user.email,
-        .name = user.name,
-        .locale = user.locale,
-        .locale_set = user.locale_set,
-        .exp = exp,
-    }, std.mem.span(jwt_secret));
+    const token = try generateJwtWithRoles(arena_allocator, user);
 
-    // 4. Set cookie and redirect
     const cookie_value = try auth.cookieSet(arena_allocator, token);
     var response = try Response.redirect(arena_allocator, "/");
     try response.headers.set(arena_allocator, "Set-Cookie", cookie_value);
@@ -99,6 +111,98 @@ pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
 pub fn handleLogin(alloc: std.mem.Allocator, req: *spider.Request) !spider.Response {
     _ = req;
     return spider.Response.text(alloc, "POST received");
+}
+
+pub fn registerWithEmail(alloc: std.mem.Allocator, req: *Request) !Response {
+    var arena = std.heap.ArenaAllocator.init(alloc);
+    defer arena.deinit();
+    const arena_allocator = arena.allocator();
+
+    const body = req.body orelse return Response.text(alloc, "Empty body");
+
+    const EmailRegisterBody = struct {
+        email: []const u8,
+        name: []const u8,
+        password: []const u8,
+    };
+
+    const parsed = std.json.parseFromSlice(EmailRegisterBody, arena_allocator, body, .{}) catch {
+        return Response.text(alloc, "Invalid JSON body");
+    };
+    defer parsed.deinit();
+
+    if (parsed.value.email.len == 0 or parsed.value.password.len == 0) {
+        return Response.text(alloc, "Email and password required");
+    }
+
+    if (try repository.findByEmail(alloc, parsed.value.email)) |existing_user| {
+        const has_email_identity = try repository.findIdentityByEmail(alloc, existing_user.email, "email");
+        if (has_email_identity != null) {
+            return Response.text(alloc, "Email already registered");
+        }
+
+        const hash = try bcrypt.hash(parsed.value.password, arena_allocator);
+        try repository.addIdentity(alloc, existing_user.uuid, "email", null, hash);
+        return Response.text(alloc, "Password added to existing account");
+    }
+
+    const hash = try bcrypt.hash(parsed.value.password, arena_allocator);
+    const user = try repository.createEmailUser(alloc, parsed.value.email, parsed.value.name, hash);
+
+    const token = try generateJwtWithRoles(alloc, user);
+
+    const cookie_value = try auth.cookieSet(alloc, token);
+    var response = try Response.redirect(alloc, "/");
+    try response.headers.set(alloc, "Set-Cookie", cookie_value);
+
+    return response;
+}
+
+pub fn loginWithEmail(alloc: std.mem.Allocator, req: *Request) !Response {
+    var arena = std.heap.ArenaAllocator.init(alloc);
+    defer arena.deinit();
+    const arena_allocator = arena.allocator();
+
+    const body = req.body orelse return Response.text(alloc, "Empty body");
+
+    const EmailLoginBody = struct {
+        email: []const u8,
+        password: []const u8,
+    };
+
+    const parsed = std.json.parseFromSlice(EmailLoginBody, arena_allocator, body, .{}) catch {
+        return Response.text(alloc, "Invalid JSON body");
+    };
+    defer parsed.deinit();
+
+    const identity = try repository.findIdentityByEmail(alloc, parsed.value.email, "email") orelse {
+        return Response.text(alloc, "Invalid credentials");
+    };
+
+    const password_ok = try bcrypt.verify(parsed.value.password, identity.password_hash orelse "");
+    if (!password_ok) {
+        return Response.text(alloc, "Invalid credentials");
+    }
+
+    const user = try repository.findByUuid(alloc, identity.user_uuid) orelse {
+        return Response.text(alloc, "User not found");
+    };
+
+    const token = try generateJwtWithRoles(alloc, user);
+
+    const cookie_value = try auth.cookieSet(alloc, token);
+    var response = try Response.redirect(alloc, "/");
+    try response.headers.set(alloc, "Set-Cookie", cookie_value);
+
+    return response;
+}
+
+pub fn logout(alloc: std.mem.Allocator, req: *Request) !Response {
+    _ = req;
+    const cookie_value = try auth.cookieClear(alloc);
+    var response = try Response.redirect(alloc, "/login");
+    try response.headers.set(alloc, "Set-Cookie", cookie_value);
+    return response;
 }
 
 test "transaction creates table but rolls back" {

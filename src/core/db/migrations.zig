@@ -24,6 +24,18 @@ const MIGRATIONS = [_]Migration{
         .version = "20260417100001",
         .sql_file = @embedFile("./migrations/20260417100001_create_todos.sql"),
     },
+    .{
+        .version = "20260421000001",
+        .sql_file = @embedFile("./migrations/20260421000001_add_uuid_to_users.sql"),
+    },
+    .{
+        .version = "20260421000002",
+        .sql_file = @embedFile("./migrations/20260421000002_create_auth_tables.sql"),
+    },
+    .{
+        .version = "20260421000003",
+        .sql_file = @embedFile("./migrations/20260421000003_migrate_auth_data.sql"),
+    },
 };
 
 fn extractUpSection(sql_file: []const u8) []const u8 {

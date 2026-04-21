@@ -9,11 +9,11 @@ pub fn findOrCreateOAuthUser(alloc: std.mem.Allocator, profile: google.GooglePro
     }
 
     if (try repository.findByEmail(alloc, profile.email)) |user| {
-        return repository.updateUser(alloc, user.id, .{
-            .google_id = profile.id,
+        return repository.updateUser(alloc, user.uuid, .{
+            .name = profile.name,
             .avatar_url = profile.picture,
         });
     }
 
-    return repository.createOAuthUser(alloc, profile.email, profile.name, profile.id, profile.picture);
+    return repository.createOAuthUser(alloc, profile.email, profile.name, profile.id, profile.picture, "pt_BR");
 }

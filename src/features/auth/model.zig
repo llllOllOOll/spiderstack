@@ -1,5 +1,6 @@
 pub const User = struct {
     id: i64,
+    uuid: []const u8,
     email: []const u8,
     name: []const u8,
     google_id: ?[]const u8,
@@ -7,6 +8,7 @@ pub const User = struct {
     created_at: []const u8,
     locale: []const u8,
     locale_set: bool,
+    tenant_id: ?[]const u8,
 };
 
 pub const CreateInput = struct {

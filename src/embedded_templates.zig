@@ -5,16 +5,16 @@
 pub const EmbeddedTemplates = struct {
 
     auth_login: []const u8 = @embedFile("features/auth/views/login.html"),
+    games_card_game: []const u8 = @embedFile("features/games/views/card_game.html"),
     games_index: []const u8 = @embedFile("features/games/views/index.html"),
     games_modal_game: []const u8 = @embedFile("features/games/views/modal_game.html"),
-    games_card_game: []const u8 = @embedFile("features/games/views/card_game.html"),
     home_index: []const u8 = @embedFile("features/home/views/index.html"),
     todo_index: []const u8 = @embedFile("features/todo/views/index.html"),
     todo_item_todo: []const u8 = @embedFile("features/todo/views/item_todo.html"),
+    layout: []const u8 = @embedFile("shared/templates/layout.html"),
     partials_bottom_nav: []const u8 = @embedFile("shared/templates/partials/bottom_nav.html"),
     partials_drawer: []const u8 = @embedFile("shared/templates/partials/drawer.html"),
     partials_sidebar: []const u8 = @embedFile("shared/templates/partials/sidebar.html"),
     partials_topbar: []const u8 = @embedFile("shared/templates/partials/topbar.html"),
-    layout: []const u8 = @embedFile("shared/templates/layout.html"),
 
 };

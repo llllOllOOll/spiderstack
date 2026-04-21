@@ -1,4 +1,3 @@
-// src/core/middleware/auth_middleware.zig
 const std = @import("std");
 const spider = @import("spider");
 
@@ -7,13 +6,21 @@ const Response = spider.Response;
 const NextFn = spider.web.NextFn;
 const auth = spider.auth;
 
+pub const Features = struct {
+    rbac_enabled: bool = false,
+};
+
+pub const features = Features{};
+
 pub const AppClaims = struct {
-    sub: i64,
+    sub: []const u8,
     email: []const u8,
     name: []const u8,
     locale: []const u8,
     locale_set: bool,
     exp: i64,
+    roles: []const []const u8,
+    permissions: []const []const u8,
 };
 
 const PUBLIC_PATHS = [_][]const u8{
@@ -22,6 +29,8 @@ const PUBLIC_PATHS = [_][]const u8{
     "/up",
     "/auth/google",
     "/auth/google/callback",
+    "/auth/email/register",
+    "/auth/email/login",
     "/login",
     "/dev/form",
 };
@@ -47,14 +56,25 @@ fn localeFromHeader(req: *Request) []const u8 {
     return if (tag.len > 0) tag else "pt_BR";
 }
 
+pub fn hasPermission(claims: *const AppClaims, required: []const u8) bool {
+    if (!features.rbac_enabled) return true;
+    for (claims.permissions) |p| {
+        if (std.mem.eql(u8, p, required)) return true;
+    }
+    return false;
+}
+
+pub fn requirePermission(claims: *const AppClaims, required: []const u8) bool {
+    if (!features.rbac_enabled) return true;
+    return hasPermission(claims, required);
+}
+
 pub fn authMiddleware(alloc: std.mem.Allocator, req: *Request, next: NextFn) !Response {
-    // ── Public routes: skip auth, resolve locale from header ──────────
     if (isPublicPath(req.path)) {
         req.locale = localeFromHeader(req);
         return next(alloc, req);
     }
 
-    // ── Validate body requests ────────────────────────────────────────
     const has_content_length = req.headers.get("Content-Length") != null or
         req.headers.get("Transfer-Encoding") != null;
 
@@ -66,7 +86,6 @@ pub fn authMiddleware(alloc: std.mem.Allocator, req: *Request, next: NextFn) !Re
         return Response.text(alloc, msg);
     }
 
-    // ── Validate JWT ──────────────────────────────────────────────────
     const jwt_secret_z = std.c.getenv("JWT_SECRET") orelse
         return Response.redirect(alloc, "/login");
     const jwt_secret = std.mem.span(jwt_secret_z);
@@ -77,30 +96,29 @@ pub fn authMiddleware(alloc: std.mem.Allocator, req: *Request, next: NextFn) !Re
     const token = auth.cookieGet(cookie_header) orelse
         return Response.redirect(alloc, "/login");
 
-    const claims = auth.jwtVerify(AppClaims, alloc, token, jwt_secret) catch
+    var arena = std.heap.ArenaAllocator.init(alloc);
+    defer arena.deinit();
+    const arena_alloc = arena.allocator();
+
+    const claims = auth.jwtVerify(AppClaims, arena_alloc, token, jwt_secret) catch
         return Response.redirect(alloc, "/login");
 
-    // ── Resolve locale: JWT preference > Accept-Language header ──────
     const resolved_locale = if (claims.locale_set)
         claims.locale
     else
         localeFromHeader(req);
 
-    // ── Inject into req.user (NEW) and req.params (DEPRECATED) ────────
     req.locale = resolved_locale;
     req.user = .{
-        .id = try std.fmt.allocPrint(alloc, "{d}", .{claims.sub}),
+        .id = try alloc.dupe(u8, claims.sub),
         .email = try alloc.dupe(u8, claims.email),
         .name = try alloc.dupe(u8, claims.name),
     };
-    alloc.free(claims.email);
-    alloc.free(claims.name);
-    alloc.free(claims.locale);
 
-    // DEPRECATED: usar req.user.id/email/name ao invés disso
     try req.params.put(alloc, try alloc.dupe(u8, "_user_id"), try alloc.dupe(u8, req.user.id.?));
     try req.params.put(alloc, try alloc.dupe(u8, "_user_email"), try alloc.dupe(u8, req.user.email.?));
     try req.params.put(alloc, try alloc.dupe(u8, "_user_name"), try alloc.dupe(u8, req.user.name.?));
+    try req.params.put(alloc, try alloc.dupe(u8, "_user_roles"), try alloc.dupe(u8, try std.mem.join(alloc, ",", claims.roles)));
 
     return next(alloc, req);
 }
