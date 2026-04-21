@@ -17,6 +17,9 @@ zig-pkg/
 # Documentation
 DOCS/
 
+# Migration notes (temporary files)
+*_MIGRATION.md
+
 # Zig specific
 build/
 

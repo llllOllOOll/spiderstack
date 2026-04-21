@@ -26,16 +26,21 @@ This is a demo project showing how to build a complete web application using the
 ## Features
 
 ### 1. Authentication System
+- Unified login/register interface
 - Login via OAuth2 with Google
+- Email/password authentication
 - JWT token generation and validation
 - Secure cookies for session
 - User locale support
+- Role-Based Access Control (RBAC)
 
 ### 2. Games Management (CRUD)
 - List games from database
 - Create new game
 - Update existing game
 - Delete game
+- Modal-based game editing
+- Alpine.js for reactive UI components
 
 ### 3. Todo List (CRUD completo com HTMX)
 - List, create, update, delete tasks
@@ -184,6 +189,9 @@ zig build test-integration
 | GET | `/login` | Login page | ❌ |
 | GET | `/auth/google` | Redirect to Google | ❌ |
 | GET | `/auth/google/callback` | OAuth callback | ❌ |
+| POST | `/auth/email/register` | Email registration | ❌ |
+| POST | `/auth/email/login` | Email login | ❌ |
+| GET | `/logout` | Logout user | ✅ |
 | GET | `/todo` | Todo list | ✅ |
 | POST | `/todo/create` | Create todo | ✅ |
 | POST | `/todo/:id/update` | Update todo | ✅ |
@@ -315,6 +323,10 @@ The compiled binary will be at `zig-out/bin/spiderstack`
 - **Author**: Seven
 - **Email**: 7b37b3@gmail.com
 - **Twitter**: [@1111O11OO11](https://x.com/1111O11OO11)
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture patterns and conventions
 
 ## References
 
