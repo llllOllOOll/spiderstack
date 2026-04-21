@@ -1,53 +1,254 @@
 <!DOCTYPE html>
 <html lang="{{ html_lang | default:"pt-BR" }}" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - ZigApp</title>
-  <link href="/css/app.css" rel="stylesheet">
-  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ auth_page_title }} - SpiderStack</title>
+<link href="/css/app.css" rel="stylesheet">
+<script src="https://unpkg.com/htmx.org@1.9.12"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen flex items-center justify-center p-4">
 
-  <div class="w-full max-w-md">
+<div class="w-full max-w-md" x-data="{ isRegister: false, showForgot: false, loading: false }">
     <!-- Logo -->
-  <div class="w-full max-w-md">
-    <!-- Logo -->
-    <div class="text-center mb-10">
-      <img src="/spider_logo.png" alt="SpiderStack" class="w-20 h-20 mx-auto mb-2">
-      <div class="inline-flex items-center gap-2 text-2xl font-bold tracking-tighter">
-        <span class="text-yellow-400">SpiderStack</span>
-      </div>
-      <p class="text-zinc-400 mt-2 text-sm">Zig + Spider + Tailwind + HTMX</p>
+    <div class="text-center mb-8">
+        <img src="/spider_logo.png" alt="SpiderStack" class="w-16 h-16 mx-auto mb-3">
+        <div class="text-2xl font-bold tracking-tighter">
+            <span class="text-yellow-400">SpiderStack</span>
+        </div>
+        <p class="text-zinc-500 mt-1 text-sm">{{ auth_subtitle }}</p>
     </div>
 
-    <!-- Login Card -->
-    <div class="bg-zinc-900 rounded-3xl p-8">
-      <h1 class="text-3xl font-bold text-center mb-2">{{ login_title }}</h1>
-      <p class="text-zinc-400 text-sm text-center mb-8">{{ login_subtitle }}</p>
-      
-      <a href="/auth/google" 
-         class="flex items-center justify-center gap-3 w-full bg-white hover:bg-gray-100 transition text-zinc-900 font-medium py-3.5 rounded-2xl">
-        <svg class="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        {{ google_button_text }}
-      </a>
+    <!-- Auth Card -->
+    <div class="bg-zinc-900 rounded-2xl p-6 shadow-xl">
+        <!-- Toggle Login/Register -->
+        <div class="flex bg-zinc-800 rounded-xl p-1 mb-6" x-show="!showForgot">
+            <button 
+                @click="isRegister = false" 
+                :class="!isRegister ? 'bg-zinc-700 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'"
+                class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all">
+                {{ login_tab }}
+            </button>
+            <button 
+                @click="isRegister = true" 
+                :class="isRegister ? 'bg-zinc-700 text-white shadow' : 'text-zinc-400 hover:text-zinc-200'"
+                class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all">
+                {{ register_tab }}
+            </button>
+        </div>
 
-      <div class="text-center mt-6 text-xs text-zinc-500">
-        {{ login_terms }}
-      </div>
+        <!-- Forgot Password Toggle -->
+        <div class="text-center mb-6" x-show="showForgot">
+            <h2 class="text-lg font-semibold">{{ forgot_password_title }}</h2>
+            <p class="text-zinc-400 text-sm mt-1">{{ forgot_password_desc }}</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="auth-error" class="mb-4 hidden">
+            <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg text-sm">
+                <span id="error-text"></span>
+            </div>
+        </div>
+
+<!-- Login Form -->
+    <form 
+        x-show="!showForgot && !isRegister"
+        hx-post="/auth/email/login"
+        hx-target="#auth-error"
+        hx-swap="innerHTML"
+        @submit="loading = true"
+        @htmx:after-request="loading = false; if(event.detail.xhr.status === 200) { window.location.href = '/'; } else { document.getElementById('auth-error').classList.remove('hidden'); document.getElementById('error-text').textContent = event.detail.xhr.response; }"
+        class="space-y-4">
+
+        <!-- Email field -->
+        <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">{{ email_label }}</label>
+            <input 
+                type="email" 
+                name="email" 
+                required
+                class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/50 transition"
+                placeholder="{{ email_placeholder }}">
+        </div>
+
+        <!-- Password field -->
+        <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">{{ password_label }}</label>
+            <input 
+                type="password" 
+                name="password" 
+                required
+                class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/50 transition"
+                placeholder="{{ password_placeholder }}">
+        </div>
+
+        <!-- Forgot password link -->
+        <div class="flex justify-end">
+            <button 
+                type="button"
+                @click="showForgot = true; document.getElementById('auth-error').classList.add('hidden')" 
+                class="text-sm text-zinc-400 hover:text-yellow-400 transition">
+                {{ forgot_password_link }}
+            </button>
+        </div>
+
+        <!-- Submit button -->
+        <button 
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-yellow-400/50 disabled:cursor-not-allowed text-zinc-900 font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2">
+            <span x-show="loading" class="animate-spin">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </span>
+            {{ login_button }}
+        </button>
+    </form>
+
+    <!-- Register Form -->
+    <form 
+        x-show="!showForgot && isRegister"
+        x-cloak
+        hx-post="/auth/email/register"
+        hx-target="#auth-error"
+        hx-swap="innerHTML"
+        @submit="loading = true"
+        @htmx:after-request="loading = false; if(event.detail.xhr.status === 200) { window.location.href = '/'; } else { document.getElementById('auth-error').classList.remove('hidden'); document.getElementById('error-text').textContent = event.detail.xhr.response; }"
+        class="space-y-4">
+
+        <!-- Name field -->
+        <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">{{ name_label }}</label>
+            <input 
+                type="text" 
+                name="name" 
+                required
+                class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/50 transition"
+                placeholder="{{ name_placeholder }}">
+        </div>
+
+        <!-- Email field -->
+        <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">{{ email_label }}</label>
+            <input 
+                type="email" 
+                name="email" 
+                required
+                class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/50 transition"
+                placeholder="{{ email_placeholder }}">
+        </div>
+
+        <!-- Password field -->
+        <div>
+            <label class="block text-sm text-zinc-400 mb-1.5">{{ password_label }}</label>
+            <input 
+                type="password" 
+                name="password" 
+                required
+                class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/50 transition"
+                placeholder="{{ password_placeholder }}">
+        </div>
+
+        <!-- Submit button -->
+        <button 
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-yellow-400/50 disabled:cursor-not-allowed text-zinc-900 font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2">
+            <span x-show="loading" class="animate-spin">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </span>
+            {{ register_button }}
+        </button>
+    </form>
+
+        <!-- Forgot Password Form -->
+        <form 
+            x-show="showForgot"
+            x-cloak
+            hx-post="/auth/password/forgot"
+            hx-target="#forgot-error"
+            hx-swap="innerHTML"
+            @submit="loading = true"
+            @htmx:after-request="loading = false"
+            class="space-y-4">
+            
+            <div id="forgot-error" class="hidden">
+                <div class="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-3 rounded-lg text-sm">
+                    {{ forgot_success_message }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm text-zinc-400 mb-1.5">{{ email_label }}</label>
+                <input 
+                    type="email" 
+                    name="email" 
+                    required
+                    class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-yellow-400/50 focus:ring-1 focus:ring-yellow-400/50 transition"
+                    placeholder="{{ email_placeholder }}">
+            </div>
+
+            <button 
+                type="submit"
+                :disabled="loading"
+                class="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-yellow-400/50 disabled:cursor-not-allowed text-zinc-900 font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2">
+                <span x-show="loading" class="animate-spin">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </span>
+                {{ send_reset_button }}
+            </button>
+
+            <div class="text-center">
+                <button 
+                    type="button"
+                    @click="showForgot = false" 
+                    class="text-sm text-zinc-400 hover:text-yellow-400 transition">
+                    {{ back_to_login }}
+                </button>
+            </div>
+        </form>
+
+        <!-- Divider -->
+        <div x-show="!showForgot" class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-zinc-700"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+                <span class="px-2 bg-zinc-900 text-zinc-500">{{ or_divider }}</span>
+            </div>
+        </div>
+
+        <!-- Google Button -->
+        <a x-show="!showForgot" href="/auth/google" class="flex items-center justify-center gap-3 w-full bg-white hover:bg-gray-100 transition text-zinc-900 font-medium py-3 rounded-lg">
+            <svg class="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            {{ google_button_text }}
+        </a>
+
+        <!-- Terms -->
+        <div x-show="!showForgot" class="text-center mt-4 text-xs text-zinc-500">
+            {{ auth_terms }}
+        </div>
     </div>
 
     <!-- Footer -->
-    <div class="text-center mt-8 text-xs text-zinc-500">
-      {{ login_footer }}
+    <div class="text-center mt-6 text-xs text-zinc-500">
+        {{ login_footer }}
     </div>
-  </div>
+</div>
 
 </body>
 </html>

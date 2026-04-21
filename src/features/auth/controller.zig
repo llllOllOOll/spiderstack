@@ -113,88 +113,68 @@ pub fn handleLogin(alloc: std.mem.Allocator, req: *spider.Request) !spider.Respo
     return spider.Response.text(alloc, "POST received");
 }
 
-pub fn registerWithEmail(alloc: std.mem.Allocator, req: *Request) !Response {
+pub fn handleEmailAuth(alloc: std.mem.Allocator, req: *Request) !Response {
+    const input = try req.parseForm(alloc, model.CreateInput);
+
     var arena = std.heap.ArenaAllocator.init(alloc);
     defer arena.deinit();
     const arena_allocator = arena.allocator();
 
-    const body = req.body orelse return Response.text(alloc, "Empty body");
-
-    const EmailRegisterBody = struct {
-        email: []const u8,
-        name: []const u8,
-        password: []const u8,
-    };
-
-    const parsed = std.json.parseFromSlice(EmailRegisterBody, arena_allocator, body, .{}) catch {
-        return Response.text(alloc, "Invalid JSON body");
-    };
-    defer parsed.deinit();
-
-    if (parsed.value.email.len == 0 or parsed.value.password.len == 0) {
+    if (input.email.len == 0 or input.password.len == 0) {
         return Response.text(alloc, "Email and password required");
     }
 
-    if (try repository.findByEmail(alloc, parsed.value.email)) |existing_user| {
-        const has_email_identity = try repository.findIdentityByEmail(alloc, existing_user.email, "email");
-        if (has_email_identity != null) {
-            return Response.text(alloc, "Email already registered");
+    const isRegister = input.name.len > 0;
+
+    if (isRegister) {
+        // Registration flow
+        if (try repository.findByEmail(alloc, input.email)) |existing_user| {
+            const has_email_identity = try repository.findIdentityByEmail(alloc, existing_user.email, "email");
+            if (has_email_identity != null) {
+                return Response.text(alloc, "Email already registered");
+            }
+
+            const hash = try bcrypt.hash(input.password, arena_allocator);
+            try repository.addIdentity(alloc, existing_user.uuid, "email", null, hash);
+
+            // Login after adding identity
+            const user = existing_user;
+            const token = try generateJwtWithRoles(alloc, user);
+            const cookie_value = try auth.cookieSet(alloc, token);
+            var response = try Response.redirect(alloc, "/");
+            try response.headers.set(alloc, "Set-Cookie", cookie_value);
+            return response;
         }
 
-        const hash = try bcrypt.hash(parsed.value.password, arena_allocator);
-        try repository.addIdentity(alloc, existing_user.uuid, "email", null, hash);
-        return Response.text(alloc, "Password added to existing account");
+        const hash = try bcrypt.hash(input.password, arena_allocator);
+        const user = try repository.createEmailUser(alloc, input.email, input.name, hash);
+
+        const token = try generateJwtWithRoles(alloc, user);
+        const cookie_value = try auth.cookieSet(alloc, token);
+        var response = try Response.redirect(alloc, "/");
+        try response.headers.set(alloc, "Set-Cookie", cookie_value);
+        return response;
+    } else {
+        // Login flow
+        const identity = try repository.findIdentityByEmail(alloc, input.email, "email") orelse {
+            return Response.text(alloc, "Invalid credentials");
+        };
+
+        const password_ok = try bcrypt.verify(input.password, identity.password_hash orelse "");
+        if (!password_ok) {
+            return Response.text(alloc, "Invalid credentials");
+        }
+
+        const user = try repository.findByUuid(alloc, identity.user_uuid) orelse {
+            return Response.text(alloc, "User not found");
+        };
+
+        const token = try generateJwtWithRoles(alloc, user);
+        const cookie_value = try auth.cookieSet(alloc, token);
+        var response = try Response.redirect(alloc, "/");
+        try response.headers.set(alloc, "Set-Cookie", cookie_value);
+        return response;
     }
-
-    const hash = try bcrypt.hash(parsed.value.password, arena_allocator);
-    const user = try repository.createEmailUser(alloc, parsed.value.email, parsed.value.name, hash);
-
-    const token = try generateJwtWithRoles(alloc, user);
-
-    const cookie_value = try auth.cookieSet(alloc, token);
-    var response = try Response.redirect(alloc, "/");
-    try response.headers.set(alloc, "Set-Cookie", cookie_value);
-
-    return response;
-}
-
-pub fn loginWithEmail(alloc: std.mem.Allocator, req: *Request) !Response {
-    var arena = std.heap.ArenaAllocator.init(alloc);
-    defer arena.deinit();
-    const arena_allocator = arena.allocator();
-
-    const body = req.body orelse return Response.text(alloc, "Empty body");
-
-    const EmailLoginBody = struct {
-        email: []const u8,
-        password: []const u8,
-    };
-
-    const parsed = std.json.parseFromSlice(EmailLoginBody, arena_allocator, body, .{}) catch {
-        return Response.text(alloc, "Invalid JSON body");
-    };
-    defer parsed.deinit();
-
-    const identity = try repository.findIdentityByEmail(alloc, parsed.value.email, "email") orelse {
-        return Response.text(alloc, "Invalid credentials");
-    };
-
-    const password_ok = try bcrypt.verify(parsed.value.password, identity.password_hash orelse "");
-    if (!password_ok) {
-        return Response.text(alloc, "Invalid credentials");
-    }
-
-    const user = try repository.findByUuid(alloc, identity.user_uuid) orelse {
-        return Response.text(alloc, "User not found");
-    };
-
-    const token = try generateJwtWithRoles(alloc, user);
-
-    const cookie_value = try auth.cookieSet(alloc, token);
-    var response = try Response.redirect(alloc, "/");
-    try response.headers.set(alloc, "Set-Cookie", cookie_value);
-
-    return response;
 }
 
 pub fn logout(alloc: std.mem.Allocator, req: *Request) !Response {
