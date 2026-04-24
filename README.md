@@ -9,7 +9,7 @@ This is a demo project showing how to build a complete web application using the
 ## Tech Stack
 
 ### Backend
-- **Language**: Zig 0.16.0-dev.2984+cb7d2b056
+- **Language**: Zig 0.17.0-dev
 - **Web Framework**: [Spider](https://www.spiderme.org/) - full-featured web framework for Zig
 - **Database**: PostgreSQL 16 (via Spider's native driver)
 - **Authentication**: JWT + OAuth2 (Google Login)
@@ -145,7 +145,7 @@ The application will be available at `http://127.0.0.1:8080`
 
 ### 4. Prerequisites
 
-**PostgreSQL Client Library (libpq)** is required to compile this project.
+**PostgreSQL Client Library (libpq)** is installed automatically by Spider. Just ensure you have the development headers available:
 
 #### Arch Linux
 ```bash
@@ -167,10 +167,7 @@ sudo dnf install postgresql-devel
 brew install libpq
 ```
 
-#### Verify Installation
-```bash
-pkg-config --exists libpq && echo "ok"
-```
+> **Note:** Spider handles `libpq` linking automatically. No manual linking required in your build.zig!
 
 ### 5. Tests
 ```bash
