@@ -41,7 +41,6 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addImport("spider", spider_mod);
     exe.root_module.addImport("core", core_mod);
     exe.root_module.addImport("features", features_mod);
-    exe.root_module.linkSystemLibrary("pq", .{});
 
     b.installArtifact(exe);
 
@@ -79,7 +78,6 @@ pub fn build(b: *std.Build) void {
     });
 
     const integration_tests = b.addTest(.{ .root_module = integration_mod });
-    integration_tests.root_module.linkSystemLibrary("pq", .{});
 
     const run_integration_tests = b.addRunArtifact(integration_tests);
 
