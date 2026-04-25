@@ -95,7 +95,7 @@ pub fn googleCallback(alloc: std.mem.Allocator, req: *Request) !Response {
     };
 
     const googleConfig = config.getGoogleConfig();
-    const profile = try service.fetchGoogleProfile(arena_allocator, code, googleConfig);
+    const profile = try service.fetchGoogleProfile(arena_allocator, req.io, code, googleConfig);
 
     const user = try use_case.findOrCreateOAuthUser(arena_allocator, profile);
 

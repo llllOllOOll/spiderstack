@@ -3,36 +3,32 @@ const spider = @import("spider");
 const google = spider.google;
 const http_client = spider.http_client;
 
-pub fn fetchGoogleProfile(alloc: std.mem.Allocator, code: []const u8, config: google.GoogleConfig) !google.GoogleProfile {
+pub fn fetchGoogleProfile(alloc: std.mem.Allocator, io: std.Io, code: []const u8, config: google.GoogleConfig) !google.GoogleProfile {
     var arena = std.heap.ArenaAllocator.init(alloc);
     defer arena.deinit();
     const arena_allocator = arena.allocator();
 
-    const token_body = try std.fmt.allocPrint(
-        arena_allocator,
-        "code={s}&client_id={s}&client_secret={s}&redirect_uri={s}&grant_type=authorization_code",
-        .{ code, config.client_id, config.client_secret, config.redirect_uri },
-    );
-
-    const token_resp = try http_client.post(
-        arena_allocator,
-        "https://oauth2.googleapis.com/token",
-        token_body,
-        "application/x-www-form-urlencoded",
-    );
+    // Request access token using pacman
+    var token_res = try http_client.post(io, arena_allocator, "https://oauth2.googleapis.com/token", .{
+        .body = .{ .form = &.{
+            .{ "code", code },
+            .{ "client_id", config.client_id },
+            .{ "client_secret", config.client_secret },
+            .{ "redirect_uri", config.redirect_uri },
+            .{ "grant_type", "authorization_code" },
+        } },
+    });
+    defer token_res.deinit();
 
     const TokenResponse = struct { access_token: []const u8 };
-    const parsed_token = try std.json.parseFromSlice(TokenResponse, arena_allocator, token_resp, .{ .ignore_unknown_fields = true });
+    const parsed_token = try token_res.json(TokenResponse);
     defer parsed_token.deinit();
 
-    const bearer = try std.fmt.allocPrint(arena_allocator, "Bearer {s}", .{parsed_token.value.access_token});
-    const headers = [_]std.http.Header{.{ .name = "Authorization", .value = bearer }};
-
-    const profile_resp = try http_client.get(
-        arena_allocator,
-        "https://www.googleapis.com/oauth2/v2/userinfo",
-        &headers,
-    );
+    // Request user profile using pacman
+    var profile_res = try http_client.get(io, arena_allocator, "https://www.googleapis.com/oauth2/v2/userinfo", .{
+        .headers = &.{.{ .name = "Authorization", .value = try std.fmt.allocPrint(arena_allocator, "Bearer {s}", .{parsed_token.value.access_token}) }},
+    });
+    defer profile_res.deinit();
 
     const RawProfile = struct {
         id: []const u8,
@@ -40,14 +36,13 @@ pub fn fetchGoogleProfile(alloc: std.mem.Allocator, code: []const u8, config: go
         name: []const u8,
         picture: []const u8,
     };
-
-    const parsed = try std.json.parseFromSlice(RawProfile, arena_allocator, profile_resp, .{ .ignore_unknown_fields = true });
-    defer parsed.deinit();
+    const parsed_profile = try profile_res.json(RawProfile);
+    defer parsed_profile.deinit();
 
     return google.GoogleProfile{
-        .id = try arena_allocator.dupe(u8, parsed.value.id),
-        .email = try arena_allocator.dupe(u8, parsed.value.email),
-        .name = try arena_allocator.dupe(u8, parsed.value.name),
-        .picture = try arena_allocator.dupe(u8, parsed.value.picture),
+        .id = try alloc.dupe(u8, parsed_profile.value.id),
+        .email = try alloc.dupe(u8, parsed_profile.value.email),
+        .name = try alloc.dupe(u8, parsed_profile.value.name),
+        .picture = try alloc.dupe(u8, parsed_profile.value.picture),
     };
 }

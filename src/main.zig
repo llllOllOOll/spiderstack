@@ -7,6 +7,7 @@ const auth = features.auth;
 const home = features.home;
 const games = features.games;
 const todo = features.todo;
+const movies = features.movies;
 const db = @import("spider").pg;
 const migrations = core.db.migrations;
 const middleware = core.middleware;
@@ -45,6 +46,10 @@ pub fn main(init: std.process.Init) !void {
         .post("/games/:id/delete", games.controller.delete)
         .get("/", home.controller.index)
         .get("/games", games.controller.index)
+        .get("/movies", movies.controller.index)
+        .get("/movies/search", movies.controller.search)
+        .get("/movies/popular", movies.controller.popular)
+        .get("/movies/:id", movies.controller.movieDetails)
         .listen() catch |err| {
         std.log.err("server error: {}", .{err});
         return err;

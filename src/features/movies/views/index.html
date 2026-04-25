@@ -1,0 +1,65 @@
+{% extends "layout" %}
+{% block "content" %}
+<div class="max-w-2xl mx-auto px-4 py-6">
+
+  <!-- Header -->
+  <h1 class="text-2xl font-semibold text-gray-900 mb-1">Movie Database</h1>
+  <p class="text-sm text-gray-500 mb-4">Search and explore movies using TMDb API</p>
+
+  <!-- Nav buttons -->
+  <div class="grid grid-cols-2 gap-2 mb-4">
+    <a href="/movies/search" class="bg-blue-500 text-white text-sm font-medium text-center py-2 rounded-lg hover:bg-blue-600 transition-colors">
+      Search Movies
+    </a>
+    <a href="/movies/popular" class="bg-emerald-500 text-white text-sm font-medium text-center py-2 rounded-lg hover:bg-emerald-600 transition-colors">
+      Popular Movies
+    </a>
+  </div>
+
+  <!-- Search bar -->
+  <form action="/movies/search" method="get" class="flex gap-2 mb-6">
+    <input type="text" name="q" placeholder="Enter movie title..."
+           class="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400">
+    <button type="submit"
+            class="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors">
+      Search
+    </button>
+  </form>
+
+  <!-- Section label -->
+  <p class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">Popular right now</p>
+
+  <!-- Movie cards -->
+  <div class="flex flex-col gap-3">
+    {% for movie in movies %}
+    <a href="/movies/{{ movie.id }}" class="flex gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100 hover:border-gray-200 transition-colors">
+      
+      <!-- Poster thumbnail -->
+      {% if movie.poster_path %}
+      <img src="https://image.tmdb.org/t/p/w92{{ movie.poster_path }}"
+           alt="{{ movie.title }}"
+           class="w-14 h-20 object-cover rounded-lg flex-shrink-0">
+      {% else %}
+      <div class="w-14 h-20 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
+        <span class="text-gray-400 text-xl font-medium">{{ movie.title[0..1] }}</span>
+      </div>
+      {% end %}
+
+      <!-- Info -->
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-gray-900 mb-0.5 truncate">{{ movie.title }}</p>
+        <p class="text-xs text-gray-400 mb-1.5">
+          {{ movie.release_date[0..4] }} · {{ movie.original_language | upcase }}
+        </p>
+        <div class="flex items-center gap-1 mb-1.5">
+          <span class="text-amber-400 text-xs">★</span>
+          <span class="text-xs text-gray-400">{{ movie.vote_average }} · {{ movie.vote_count }} votes</span>
+        </div>
+        <p class="text-xs text-gray-400 leading-relaxed line-clamp-2">{{ movie.overview }}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+</div>
+{% end %}
