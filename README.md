@@ -10,9 +10,11 @@ This is a demo project showing how to build a complete web application using the
 
 ### Backend
 - **Language**: Zig 0.17.0-dev
-- **Web Framework**: [Spider](https://www.spiderme.org/) - full-featured web framework for Zig
+- **Web Framework**: [Spider](https://www.spiderme.org/) v0.2.0 - full-featured web framework for Zig
 - **Database**: PostgreSQL 16 (via Spider's native driver)
 - **Authentication**: JWT + OAuth2 (Google Login)
+- **HTTP Client**: [pacman](https://github.com/llllOllOOll/pacman) - Fetch API-inspired Zig HTTP client
+- **Build System**: Spider handles libpq linking automatically
 
 ### Frontend
 - **CSS**: Tailwind CSS + DaisyUI
@@ -62,7 +64,13 @@ This is a demo project showing how to build a complete web application using the
 ### 6. Skeleton Loading
 - Loading placeholders during navigation
 
-### 7. Template System com chuckBerry
+### 7. HTTP Client Integration (pacman)
+- Fetch API-inspired Zig HTTP client
+- Used for Google OAuth authentication
+- Built-in JSON serialization/deserialization
+- Arena-based memory management
+
+### 8. Template System com chuckBerry
 - Server-side rendering com embedded templates
 - Componentização com partials (topbar, sidebar, bottom_nav, drawer)
 - Layout inheritance
@@ -185,7 +193,7 @@ zig build test-integration
 | GET | `/` | Home page | ✅ |
 | GET | `/login` | Login page | ❌ |
 | GET | `/auth/google` | Redirect to Google | ❌ |
-| GET | `/auth/google/callback` | OAuth callback | ❌ |
+| GET | `/auth/google/callback` | OAuth callback (uses pacman HTTP client) | ❌ |
 | POST | `/auth/email/register` | Email registration | ❌ |
 | POST | `/auth/email/login` | Email login | ❌ |
 | GET | `/logout` | Logout user | ✅ |
@@ -262,6 +270,34 @@ var server = try spider.Spider.init(arena, io, "127.0.0.1", 8080, .{
 });
 ```
 
+### HTTP Client (pacman)
+The project uses the **pacman** HTTP client for external API calls:
+
+```zig
+// Google OAuth token request
+var token_res = try http_client.post(io, arena_allocator, "https://oauth2.googleapis.com/token", .{
+    .body = .{ .form = &.{
+        .{ "code", code },
+        .{ "client_id", config.client_id },
+        .{ "client_secret", config.client_secret },
+        .{ "redirect_uri", config.redirect_uri },
+        .{ "grant_type", "authorization_code" },
+    } },
+});
+defer token_res.deinit();
+
+// Parse JSON response
+const TokenResponse = struct { access_token: []const u8 };
+const parsed_token = try token_res.json(TokenResponse);
+```
+
+pacman provides:
+- Fetch API-inspired interface
+- Built-in JSON serialization
+- Query parameters and URL path params
+- Arena-based memory management
+- Full std.Io support for Zig 0.17+
+
 ### Embedded Templates (generate-templates)
 Templates are embedded at compile time via `generateEmbeddedTemplates` in build.zig:
 ```zig
@@ -329,6 +365,7 @@ The compiled binary will be at `zig-out/bin/spiderstack`
 
 - [Spider Framework](https://www.spiderme.org/)
 - [SpiderStack GitHub](https://github.com/llllOllOOll/spiderstack)
+- [pacman HTTP Client](https://github.com/llllOllOOll/pacman)
 - [Zig Language](https://ziglang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [DaisyUI](https://daisyui.com/)
