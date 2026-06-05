@@ -36,6 +36,9 @@ build/
 *.swo
 *~
 
+## mise config (https://mise.jdx.dev)
+mise.toml
+
 # OS generated
 .DS_Store
 .DS_Store?

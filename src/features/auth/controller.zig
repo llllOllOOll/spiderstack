@@ -1,19 +1,20 @@
 const std = @import("std");
+
+const AppClaims = @import("core").middleware.AppClaims;
+const features = @import("core").middleware.features;
+const i18n = @import("core").i18n;
 const spider = @import("spider");
 const db = spider.pg;
 const auth = spider.auth;
 const google = spider.google;
 
+const bcrypt = @import("bcrypt.zig");
+const config = @import("mod.zig");
+const model = @import("model.zig");
 const presenter = @import("presenter.zig");
 const repository = @import("repository.zig");
-const model = @import("model.zig");
 const service = @import("service.zig");
 const use_case = @import("use_case/index.zig");
-const config = @import("mod.zig");
-const AppClaims = @import("core").middleware.AppClaims;
-const i18n = @import("core").i18n;
-const features = @import("core").middleware.features;
-const bcrypt = @import("bcrypt.zig");
 
 fn urlDecode(alloc: std.mem.Allocator, str: []const u8) ![]u8 {
     var list: std.ArrayList(u8) = .empty;
@@ -168,7 +169,7 @@ pub fn handleEmailAuth(c: *spider.Ctx) !spider.Response {
                 return c.text("Email already registered", .{});
             }
 
-            const hash = try bcrypt.hash(input.password, c.arena);
+            const hash = try bcrypt.hash(c.arena, input.password);
             try repository.addIdentity(c.arena, existing_user.uuid, "email", null, hash);
 
             // Login after adding identity
@@ -186,7 +187,7 @@ pub fn handleEmailAuth(c: *spider.Ctx) !spider.Response {
             };
         }
 
-        const hash = try bcrypt.hash(input.password, c.arena);
+        const hash = try bcrypt.hash(c.arena, input.password);
         const user = try repository.createEmailUser(c.arena, input.email, input.name, hash);
 
         const token2 = try generateJwtWithRoles(c.arena, c._io, user);
@@ -206,7 +207,7 @@ pub fn handleEmailAuth(c: *spider.Ctx) !spider.Response {
             return c.text("Invalid credentials", .{});
         };
 
-        const password_ok = try bcrypt.verify(input.password, identity.password_hash orelse "");
+        const password_ok = try bcrypt.verify(c.arena, input.password, identity.password_hash orelse "");
         if (!password_ok) {
             return c.text("Invalid credentials", .{});
         }

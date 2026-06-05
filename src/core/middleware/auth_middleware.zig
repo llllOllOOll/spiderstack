@@ -1,6 +1,6 @@
 const std = @import("std");
-const spider = @import("spider");
 
+const spider = @import("spider");
 const Ctx = spider.Ctx;
 const Response = spider.Response;
 const NextFn = spider.NextFn;
@@ -25,6 +25,8 @@ pub const AppClaims = struct {
 
 const PUBLIC_PATHS = [_][]const u8{
     "/login",
+    "/auth/email/login",
+    "/auth/email/register",
     "/auth/google",
     "/auth/google/callback",
 };
