@@ -6,8 +6,8 @@
 
     .dependencies = .{
         .spider = .{
-            .url = "git+https://github.com/llllOllOOll/spider#7c985dd0e7275d0445fd114412246074006cdc6b",
-            .hash = "spider-0.6.3-P7cGriFwEgByXyzYwb1OWV1MoR8SEUh3zz7RbAVt2oMi",
+            .url = "git+https://github.com/llllOllOOll/spider#4d9a4e5f3f34a8a12238838522becb4adac3ec82",
+            .hash = "spider-0.6.4-P7cGrr2wrgDU7E5_2T5HaCn1_Ppbin1HBqD080Se1c98",
         },
     },
 

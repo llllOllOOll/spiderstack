@@ -8,7 +8,7 @@ const core = @import("core");
 const db = spider.pg;
 
 fn setupDb(arena: std.mem.Allocator) !void {
-    spider.loadEnv(arena, ".env") catch {};
+    spider.env.load(arena, ".env") catch {};
     try db.init(arena, std.testing.io, .{});
 }
 

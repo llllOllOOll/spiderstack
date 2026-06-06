@@ -5,7 +5,7 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // ── External dependency: Spider Web Framework ─────────────────────
-    const spider_dep = b.dependency("spider", .{ .target = target });
+    const spider_dep = b.dependency("spider", .{ .target = target, .pg = true });
     const spider_mod = spider_dep.module("spider");
 
     // ── core ──────────────────────────────────────────────────────────
